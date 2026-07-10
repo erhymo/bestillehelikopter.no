@@ -1,0 +1,50 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════
+// BestilleHelikopter.no — Storage Security Rules
+// ═══════════════════════════════════════════════════════════════
+//
+// Storage layout:
+//   jobs/{jobId}/images/{filename}.webp   — customer-uploaded photos (max 5)
+//   jobs/{jobId}/pdf/rfq.pdf              — server-generated RFQ PDF
+//
+// SECURITY MODEL:
+//   - Image uploads: client-side via Firebase SDK (authenticated user)
+//     · Must be authenticated (phone OTP gives anonymous uid)
+//     · Max file size: 500KB
+//     · Only WebP allowed (client compresses before upload)
+//     · Max 5 images per job (enforced in API route, not here)
+//   - PDF generation: server-side via Admin SDK (no client access)
+//   - All reads: via Admin SDK signed URLs (no direct client reads)
+//   - Deletion: Admin SDK only (auto-delete after 6 months)
+//
+// ═══════════════════════════════════════════════════════════════
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Job images ────────────────────────────────────────────
+    // Authenticated users can upload WebP images ≤ 500KB.
+    // No client-side read (served via signed URLs from API).
+    // No client-side delete (handled by Admin SDK).
+    match /jobs/{jobId}/images/{fileName} {
+      allow read: if false;
+      allow create: if request.auth != null
+                    && request.resource.size <= 500 * 1024
+                    && request.resource.contentType == 'image/webp';
+      allow update, delete: if false;
+    }
+
+    // ── RFQ PDFs ──────────────────────────────────────────────
+    // Generated server-side by Admin SDK. No client access.
+    match /jobs/{jobId}/pdf/{fileName} {
+      allow read, write: if false;
+    }
+
+    // ── Catch-all: deny everything else ───────────────────────
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

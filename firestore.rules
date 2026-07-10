@@ -1,0 +1,119 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════
+// BestilleHelikopter.no — Firestore Security Rules
+// ═══════════════════════════════════════════════════════════════
+//
+// SECURITY MODEL:
+//   All writes go through Next.js API routes → Admin SDK.
+//   Client-side Firestore SDK is read-only for public data.
+//   Admin uses custom claim: { admin: true } set via Admin SDK.
+//
+// THREAT MODEL & MITIGATIONS:
+//
+// T1 — Spam / abuse (mass RFQ submission)
+//   → All writes are server-side only. API routes enforce:
+//     - Phone OTP verification before RFQ creation
+//     - Rate limiting: max 5 RFQs per phone per 24h (checked in API)
+//     - Disposable email blocklist
+//     - reCAPTCHA on phone auth (Firebase default)
+//
+// T2 — Token leakage (company offer links shared publicly)
+//   → Tokens are HMAC-signed, scoped to jobId+companyId+offerId
+//   → Tokens expire after 14 days
+//   → Token does not reveal job content without server verification
+//   → Revocation: set offer status to "closed" in Firestore
+//
+// T3 — Job ID enumeration
+//   → Firestore auto-generated IDs (20 chars, cryptographically random)
+//   → No client-side read access to jobs collection
+//   → Company access only via signed token → server-side lookup
+//
+// T4 — Replay attacks
+//   → Offer submission: token verified + status must be "sent"/"viewed"
+//   → Accept offer: requires matching customer phone + OTP session
+//   → Rating: one per jobId+phone hash, enforced server-side
+//
+// T5 — Privilege escalation
+//   → Admin claim set only via Admin SDK (never via client)
+//   → All admin API routes verify token.admin === true
+//   → No client-side write rules for any collection
+//
+// T6 — Data exfiltration
+//   → Jobs, offers, stats: no client-side read at all
+//   → Companies: public read (name, region, rating — no secrets)
+//   → Ratings: only approved ones readable publicly
+//
+// T7 — SendGrid webhook spoofing
+//   → Webhook signature verification using SENDGRID_WEBHOOK_VERIFY_KEY
+//   → Webhooks only update emailOpens/linkClicks counters
+//
+// ═══════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ── Jobs ──────────────────────────────────────────────────
+    // All CRUD via Admin SDK (API routes).
+    // No client-side read/write — even authenticated users
+    // cannot browse other people's jobs.
+    match /jobs/{jobId} {
+      allow read: if isAdmin();
+      allow write: if false;
+
+      // Offers (subcollection of job)
+      // All access via Admin SDK. Companies use signed tokens
+      // which are verified in API routes, not in security rules.
+      match /offers/{offerId} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
+    }
+
+    // ── Ratings ───────────────────────────────────────────────
+    // Public: read only approved ratings (for company profiles).
+    // Admin: read all (including pending approval).
+    // Write: only via Admin SDK (API route validates input).
+    match /ratings/{ratingId} {
+      allow read: if isAdmin() || resource.data.approved == true;
+      allow write: if false;
+    }
+
+    // ── Companies ─────────────────────────────────────────────
+    // Public read: company name, region, avgRating, ratingCount.
+    // Write: admin only via Admin SDK.
+    match /companies/{companyId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ── Admin config ──────────────────────────────────────────
+    // Only accessible via Admin SDK.
+    match /admin/{document=**} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ── Stats ─────────────────────────────────────────────────
+    // Only admin can read; writes via Admin SDK (Cloud Functions).
+    match /stats/{document=**} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ── Catch-all: deny everything else ───────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

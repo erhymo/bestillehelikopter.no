@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "FIREBASE_PROJECT_ID_HERE"
+  }
+}
+

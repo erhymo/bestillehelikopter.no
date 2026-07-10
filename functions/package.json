@@ -1,0 +1,28 @@
+{
+  "name": "bestillehelikopter-functions",
+  "version": "0.1.0",
+  "private": true,
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "@sendgrid/eventwebhook": "^8.0.0",
+    "@sendgrid/mail": "^8.1.6",
+    "firebase-admin": "^13.7.0",
+    "firebase-functions": "^6.3.2",
+    "pdf-lib": "^1.17.1",
+    "sharp": "^0.34.5",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/sharp": "^0.31.1",
+    "typescript": "^5.8.0"
+  }
+}
