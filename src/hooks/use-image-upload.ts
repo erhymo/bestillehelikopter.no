@@ -64,6 +64,14 @@ export function useImageUpload() {
     });
   }, []);
 
+  const reset = useCallback(() => {
+    setEntries((prev) => {
+      prev.forEach((e) => URL.revokeObjectURL(e.preview));
+      return [];
+    });
+    setError(null);
+  }, []);
+
   const uploadAll = useCallback(
     async (jobId: string): Promise<string[]> => {
       setError(null);
@@ -97,6 +105,7 @@ export function useImageUpload() {
     previews: entries.map((e) => e.preview),
     addImage,
     removeImage,
+    reset,
     uploadAll,
     loading,
     error,

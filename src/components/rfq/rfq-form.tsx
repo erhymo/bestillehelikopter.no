@@ -153,6 +153,34 @@ export function RfqForm() {
     setMapMode("drop");
   }, []);
 
+  const handleReset = useCallback(() => {
+    if (
+      !window.confirm(
+        "Er du sikker på at du vil nullstille hele skjemaet? All informasjon du har fylt ut går tapt.",
+      )
+    ) {
+      return;
+    }
+    setMapMode("pickup");
+    setPickup(null);
+    setDrops([]);
+    setActiveDropIndex(null);
+    setCoordinateInput("");
+    setCoordinateError(null);
+    setCustomer(emptyCustomer);
+    setNettbruk(false);
+    setOver15m(false);
+    setDesiredDate("");
+    setFlexibleDate(false);
+    setNotes("");
+    setSelectedCompanyIds([]);
+    setPickupRegion(null);
+    setSubmitError(null);
+    setEmailError(null);
+    setAcceptedTerms(false);
+    imageUpload.reset();
+  }, [imageUpload]);
+
   const handleCoordinateSubmit = useCallback(() => {
     const point = parseCoordinateInput(coordinateInput);
     if (!point) {
@@ -309,7 +337,7 @@ export function RfqForm() {
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
       {/* Map (left / top) */}
-      <div className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:w-1/2">
+      <div className="lg:sticky lg:top-4 lg:w-1/2">
         <MapPicker
           mode={mapMode}
           pickup={pickup}
@@ -319,39 +347,8 @@ export function RfqForm() {
           onDropAdd={handleDropAdd}
           onDropUpdate={handleDropMapUpdate}
           onDropClick={activateDrop}
-          className="h-[50vh] w-full lg:h-full"
+          className="h-[50vh] w-full lg:h-[65vh]"
         />
-
-        {/* Mode buttons */}
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button
-            variant={mapMode === "pickup" ? "primary" : "secondary"}
-            onClick={() => {
-              setMapMode("pickup");
-              setActiveDropIndex(null);
-            }}
-            className="text-xs"
-          >
-            🟢 {pickup ? "Endre hentepunkt" : "Sett hentepunkt"}
-          </Button>
-          <Button
-            variant={mapMode === "drop" && activeDropIndex === null ? "primary" : "secondary"}
-            onClick={startAddingDrop}
-            className="text-xs"
-          >
-            🔴 Nytt leveringspunkt
-          </Button>
-          <Button
-            variant={mapMode === "idle" ? "primary" : "secondary"}
-            onClick={() => {
-              setMapMode("idle");
-              setActiveDropIndex(null);
-            }}
-            className="text-xs"
-          >
-            Navigér
-          </Button>
-        </div>
 
         <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
           <label className="block text-xs font-semibold text-gray-700">
@@ -391,6 +388,15 @@ export function RfqForm() {
             </p>
           )}
         </div>
+
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleReset}
+          className="mt-3 w-full text-xs text-gray-600"
+        >
+          ↺ Nullstill skjema
+        </Button>
       </div>
 
       {/* Form panel (right / bottom) */}
