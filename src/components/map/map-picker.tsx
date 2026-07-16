@@ -103,8 +103,7 @@ export function MapPicker({
           onClick={handleClick}
           gestureHandling="greedy"
           disableDefaultUI={false}
-          style={{ width: "100%", height: "100%" }}
-          className="rounded-lg"
+          className="h-full w-full rounded-lg"
         >
           {/* Pickup marker */}
           {pickup && <DropMarker lat={pickup.lat} lng={pickup.lng} label="H" color="green" />}
