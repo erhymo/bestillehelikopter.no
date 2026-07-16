@@ -103,6 +103,7 @@ export function MapPicker({
           onClick={handleClick}
           gestureHandling="greedy"
           disableDefaultUI={false}
+          clickableIcons={false}
           className="h-full w-full rounded-lg"
         >
           {/* Pickup marker */}
