@@ -26,7 +26,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className="w-full max-w-md rounded-xl bg-white p-0 shadow-xl backdrop:bg-black/50"
+      className="fixed top-1/2 left-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-0 shadow-xl backdrop:bg-black/50"
     >
       <div className="p-6">
         {title && <h2 className="mb-4 text-lg font-semibold">{title}</h2>}

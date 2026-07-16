@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { MapPicker, type MapMode } from "@/components/map/map-picker";
+import { MapToolbar } from "@/components/rfq/map-toolbar";
 import { PickupStep } from "@/components/rfq/pickup-step";
 import { DropsStep } from "@/components/rfq/drops-step";
 import { CustomerInfoStep } from "@/components/rfq/customer-info-step";
@@ -10,6 +11,7 @@ import { ImageUpload } from "@/components/rfq/image-upload";
 import { CompanySelector } from "@/components/rfq/company-selector";
 import { OtpModal } from "@/components/phone/otp-modal";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { usePhoneAuth } from "@/hooks/use-phone-auth";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { useFlightEstimate } from "@/hooks/use-flight-estimate";
@@ -52,6 +54,7 @@ export function RfqForm() {
   const [activeDropIndex, setActiveDropIndex] = useState<number | null>(null);
   const [coordinateInput, setCoordinateInput] = useState("");
   const [coordinateError, setCoordinateError] = useState<string | null>(null);
+  const [showCoordinateModal, setShowCoordinateModal] = useState(false);
   const [customer, setCustomer] = useState<CustomerData>(emptyCustomer);
   const [nettbruk, setNettbruk] = useState(false);
   const [over15m, setOver15m] = useState(false);
@@ -153,6 +156,22 @@ export function RfqForm() {
     setMapMode("drop");
   }, []);
 
+  const onSelectPickup = useCallback(() => {
+    setMapMode("pickup");
+    setActiveDropIndex(null);
+  }, []);
+
+  // "2 Leveringspunkt" — before the first drop exists this arms add-mode
+  // (same as "+ Leveringspunkt"); once it exists, it re-activates it for
+  // repositioning instead of creating a duplicate.
+  const onSelectFirstDrop = useCallback(() => {
+    if (drops.length === 0) {
+      startAddingDrop();
+    } else {
+      activateDrop(0);
+    }
+  }, [drops.length, startAddingDrop, activateDrop]);
+
   const handleReset = useCallback(() => {
     if (
       !window.confirm(
@@ -192,6 +211,7 @@ export function RfqForm() {
 
     setCoordinateError(null);
     setCoordinateInput("");
+    setShowCoordinateModal(false);
 
     if (mapMode === "pickup" || !pickup) {
       handlePickupSet(point);
@@ -337,7 +357,21 @@ export function RfqForm() {
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
       {/* Map (left / top) */}
-      <div className="lg:sticky lg:top-4 lg:w-1/2">
+      <div className="lg:sticky lg:top-4 lg:w-3/5">
+        <div className="mb-2">
+          <MapToolbar
+            isPickupActive={mapMode === "pickup"}
+            dropsCount={drops.length}
+            isFirstDropActive={mapMode === "drop" && activeDropIndex === 0}
+            isAddingDrop={mapMode === "drop" && activeDropIndex === null}
+            onSelectPickup={onSelectPickup}
+            onSelectFirstDrop={onSelectFirstDrop}
+            onAddDrop={startAddingDrop}
+            onOpenCoordinates={() => setShowCoordinateModal(true)}
+            onReset={handleReset}
+          />
+        </div>
+
         <MapPicker
           mode={mapMode}
           pickup={pickup}
@@ -347,74 +381,60 @@ export function RfqForm() {
           onDropAdd={handleDropAdd}
           onDropUpdate={handleDropMapUpdate}
           onDropClick={activateDrop}
-          className="h-[50vh] w-full lg:h-[65vh]"
+          className="h-[60vh] w-full lg:h-[78vh]"
         />
-
-        <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-          <label className="block text-xs font-semibold text-gray-700">
-            Lim inn koordinat for {coordinateTargetLabel}
-          </label>
-          <div className="mt-2 flex gap-2">
-            <input
-              type="text"
-              value={coordinateInput}
-              onChange={(e) => {
-                setCoordinateInput(e.target.value);
-                setCoordinateError(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCoordinateSubmit();
-              }}
-              placeholder="60.472024, 5.322054"
-              className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            />
-            <Button
-              variant="secondary"
-              onClick={handleCoordinateSubmit}
-              className="shrink-0 text-xs"
-            >
-              Bruk
-            </Button>
-          </div>
-          {coordinateError ? (
-            <p className="mt-1 text-xs text-red-600">{coordinateError}</p>
-          ) : coordinatePreview ? (
-            <p className="mt-1 text-xs text-green-700">
-              Tolkes som {formatCoordinate(coordinatePreview)}.
-            </p>
-          ) : (
-            <p className="mt-1 text-xs text-gray-500">
-              Tips: Kopier koordinater fra Google Maps, eller klikk direkte i kartet.
-            </p>
-          )}
-        </div>
-
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={handleReset}
-          className="mt-3 w-full text-xs text-gray-600"
-        >
-          ↺ Nullstill skjema
-        </Button>
       </div>
+
+      {/* Coordinate paste modal */}
+      <Modal
+        open={showCoordinateModal}
+        onClose={() => setShowCoordinateModal(false)}
+        title={`Lim inn koordinat for ${coordinateTargetLabel}`}
+      >
+        <div className="flex gap-2">
+          <input
+            type="text"
+            autoFocus
+            value={coordinateInput}
+            onChange={(e) => {
+              setCoordinateInput(e.target.value);
+              setCoordinateError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleCoordinateSubmit();
+            }}
+            placeholder="60.472024, 5.322054"
+            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          />
+          <Button variant="secondary" onClick={handleCoordinateSubmit} className="shrink-0 text-xs">
+            Bruk
+          </Button>
+        </div>
+        {coordinateError ? (
+          <p className="mt-1 text-xs text-red-600">{coordinateError}</p>
+        ) : coordinatePreview ? (
+          <p className="mt-1 text-xs text-green-700">
+            Tolkes som {formatCoordinate(coordinatePreview)}.
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-gray-500">
+            Tips: Kopier koordinater fra Google Maps, eller klikk direkte i kartet.
+          </p>
+        )}
+      </Modal>
 
       {/* Form panel (right / bottom) */}
       <div className="flex-1 space-y-8 pb-12 lg:max-w-xl">
         <PickupStep
           pickup={pickup}
           isActive={mapMode === "pickup"}
-          onActivate={() => {
-            setMapMode("pickup");
-            setActiveDropIndex(null);
-          }}
+          onActivate={onSelectPickup}
         />
 
         <DropsStep
           drops={drops}
           activeDropIndex={activeDropIndex}
           onActivateDrop={activateDrop}
-          onAddDrop={startAddingDrop}
           onUpdateDrop={handleDropUpdate}
           onDeleteDrop={handleDropDelete}
         />

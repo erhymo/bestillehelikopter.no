@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { APIProvider, Map, type MapMouseEvent } from "@vis.gl/react-google-maps";
 import { DropMarker } from "@/components/map/drop-marker";
 
-export type MapMode = "pickup" | "drop" | "idle";
+export type MapMode = "pickup" | "drop";
 
 interface PickupPoint {
   lat: number;
@@ -75,26 +75,27 @@ export function MapPicker({
   );
 
   const dropLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const activeDropLabel =
-    typeof activeDropIndex === "number"
-      ? (dropLabels[activeDropIndex] ?? String(activeDropIndex + 1))
-      : null;
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
-      <div className="relative min-h-0 flex-1">
-        {/* Mode indicator */}
-        <div className="absolute top-3 right-3 left-3 z-10 max-w-md rounded-lg bg-white/95 px-3 py-2 text-sm font-medium shadow-md backdrop-blur-sm">
-          {mode === "pickup" && "🟢 Klikk for å sette hentepunkt"}
-          {mode === "drop" &&
-            activeDropLabel &&
-            `🔴 Klikk i kartet for å flytte leveringspunkt ${activeDropLabel}`}
-          {mode === "drop" &&
-            !activeDropLabel &&
-            "🔴 Klikk i kartet for å legge til nytt leveringspunkt"}
-          {mode === "idle" && "Kart – velg modus nedenfor"}
-        </div>
+      {/* Map type toggle — part of the map module, sits above the canvas so
+          it never covers Google's own attribution/controls at the bottom. */}
+      <div className="flex shrink-0 flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+        {MAP_TYPE_LABELS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setMapType(id)}
+            className={`rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+              mapType === id ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
+      <div className="relative min-h-0 flex-1">
         <APIProvider apiKey={apiKey}>
           <Map
             defaultCenter={NORWAY_CENTER}
@@ -104,6 +105,7 @@ export function MapPicker({
             onClick={handleClick}
             gestureHandling="greedy"
             disableDefaultUI={false}
+            mapTypeControl={false}
             clickableIcons={false}
             className="h-full w-full rounded-lg"
           >
@@ -123,23 +125,6 @@ export function MapPicker({
             ))}
           </Map>
         </APIProvider>
-      </div>
-
-      {/* Map type toggle — kept outside the map so it never covers Google's
-          own attribution/controls at the bottom edge of the canvas. */}
-      <div className="flex shrink-0 flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
-        {MAP_TYPE_LABELS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setMapType(id)}
-            className={`rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
-              mapType === id ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
       </div>
     </div>
   );

@@ -116,6 +116,7 @@ export function MapView({ data }: { data: MapViewData }) {
             mapTypeId={mapType}
             mapId={mapId}
             gestureHandling="greedy"
+            mapTypeControl={false}
             clickableIcons={false}
             className="h-full w-full"
           >
