@@ -143,8 +143,9 @@ export function MapView({ data }: { data: MapViewData }) {
           </Map>
         </APIProvider>
 
-        {/* Map type selector */}
-        <div className="absolute bottom-4 left-4 flex gap-1 rounded-lg bg-white/90 p-1 shadow-lg backdrop-blur">
+        {/* Map type selector — kept at the top so it never covers Google's
+            own attribution/controls at the bottom edge of the canvas. */}
+        <div className="absolute top-4 left-4 z-10 flex gap-1 rounded-lg bg-white/90 p-1 shadow-lg backdrop-blur">
           {MAP_TYPE_LABELS.map(({ id, label }) => (
             <button
               key={id}

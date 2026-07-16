@@ -81,49 +81,53 @@ export function MapPicker({
       : null;
 
   return (
-    <div className={`relative ${className}`}>
-      {/* Mode indicator */}
-      <div className="absolute top-3 right-3 left-3 z-10 max-w-md rounded-lg bg-white/95 px-3 py-2 text-sm font-medium shadow-md backdrop-blur-sm">
-        {mode === "pickup" && "🟢 Klikk for å sette hentepunkt"}
-        {mode === "drop" &&
-          activeDropLabel &&
-          `🔴 Klikk i kartet for å flytte leveringspunkt ${activeDropLabel}`}
-        {mode === "drop" &&
-          !activeDropLabel &&
-          "🔴 Klikk i kartet for å legge til nytt leveringspunkt"}
-        {mode === "idle" && "Kart – velg modus nedenfor"}
+    <div className={`flex flex-col gap-2 ${className}`}>
+      <div className="relative min-h-0 flex-1">
+        {/* Mode indicator */}
+        <div className="absolute top-3 right-3 left-3 z-10 max-w-md rounded-lg bg-white/95 px-3 py-2 text-sm font-medium shadow-md backdrop-blur-sm">
+          {mode === "pickup" && "🟢 Klikk for å sette hentepunkt"}
+          {mode === "drop" &&
+            activeDropLabel &&
+            `🔴 Klikk i kartet for å flytte leveringspunkt ${activeDropLabel}`}
+          {mode === "drop" &&
+            !activeDropLabel &&
+            "🔴 Klikk i kartet for å legge til nytt leveringspunkt"}
+          {mode === "idle" && "Kart – velg modus nedenfor"}
+        </div>
+
+        <APIProvider apiKey={apiKey}>
+          <Map
+            defaultCenter={NORWAY_CENTER}
+            defaultZoom={DEFAULT_ZOOM}
+            mapTypeId={mapType}
+            mapId={mapId}
+            onClick={handleClick}
+            gestureHandling="greedy"
+            disableDefaultUI={false}
+            clickableIcons={false}
+            className="h-full w-full rounded-lg"
+          >
+            {/* Pickup marker */}
+            {pickup && <DropMarker lat={pickup.lat} lng={pickup.lng} label="H" color="green" />}
+
+            {/* Drop markers */}
+            {drops.map((drop, i) => (
+              <DropMarker
+                key={i}
+                lat={drop.lat}
+                lng={drop.lng}
+                label={dropLabels[i] ?? String(i + 1)}
+                color="red"
+                onClick={() => onDropClick?.(i)}
+              />
+            ))}
+          </Map>
+        </APIProvider>
       </div>
 
-      <APIProvider apiKey={apiKey}>
-        <Map
-          defaultCenter={NORWAY_CENTER}
-          defaultZoom={DEFAULT_ZOOM}
-          mapTypeId={mapType}
-          mapId={mapId}
-          onClick={handleClick}
-          gestureHandling="greedy"
-          disableDefaultUI={false}
-          clickableIcons={false}
-          className="h-full w-full rounded-lg"
-        >
-          {/* Pickup marker */}
-          {pickup && <DropMarker lat={pickup.lat} lng={pickup.lng} label="H" color="green" />}
-
-          {/* Drop markers */}
-          {drops.map((drop, i) => (
-            <DropMarker
-              key={i}
-              lat={drop.lat}
-              lng={drop.lng}
-              label={dropLabels[i] ?? String(i + 1)}
-              color="red"
-              onClick={() => onDropClick?.(i)}
-            />
-          ))}
-        </Map>
-      </APIProvider>
-
-      <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] gap-1 overflow-x-auto rounded-lg bg-white/95 p-1 shadow-md backdrop-blur-sm">
+      {/* Map type toggle — kept outside the map so it never covers Google's
+          own attribution/controls at the bottom edge of the canvas. */}
+      <div className="flex shrink-0 flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
         {MAP_TYPE_LABELS.map(({ id, label }) => (
           <button
             key={id}
