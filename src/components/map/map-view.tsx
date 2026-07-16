@@ -92,6 +92,7 @@ export function MapView({ data }: { data: MapViewData }) {
   const [mapType, setMapType] = useState<MapTypeId>("terrain");
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
+  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "";
 
   // Compute bounds center
   const allPoints = [data.pickup, ...data.drops];
@@ -118,7 +119,7 @@ export function MapView({ data }: { data: MapViewData }) {
             defaultCenter={{ lat: centerLat, lng: centerLng }}
             defaultZoom={allPoints.length === 1 ? 12 : 9}
             mapTypeId={mapType}
-            mapId="company-map-view"
+            mapId={mapId}
             gestureHandling="greedy"
             className="h-full w-full"
           >

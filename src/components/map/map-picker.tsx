@@ -51,6 +51,7 @@ export function MapPicker({
   className = "",
 }: MapPickerProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
+  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "";
   const [mapType, setMapType] = useState<MapTypeId>("terrain");
   const activeDrop = typeof activeDropIndex === "number" ? drops[activeDropIndex] : undefined;
 
@@ -98,7 +99,7 @@ export function MapPicker({
           defaultCenter={NORWAY_CENTER}
           defaultZoom={DEFAULT_ZOOM}
           mapTypeId={mapType}
-          mapId="bestille-helikopter-map"
+          mapId={mapId}
           onClick={handleClick}
           gestureHandling="greedy"
           disableDefaultUI={false}
