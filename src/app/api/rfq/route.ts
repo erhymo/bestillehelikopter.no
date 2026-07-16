@@ -121,6 +121,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Phone OTP only proves the customer controls the number verified at
+    // sign-in time — the form lets them edit the phone field afterwards, so
+    // without this check they could submit any (unverified) number.
+    if (decodedToken.phone_number !== customer.phone) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Telefonnummeret stemmer ikke med det verifiserte nummeret. Verifiser på nytt.",
+        },
+        { status: 403 },
+      );
+    }
+
+    // Rate limit: max 5 RFQs per verified user per 24h (see firestore.rules T1)
+    const RATE_LIMIT_MAX = 5;
+    const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+    const windowStart = Timestamp.fromMillis(Date.now() - RATE_LIMIT_WINDOW_MS);
+    const recentCount = await adminDb
+      .collection("jobs")
+      .where("customer.firebaseUid", "==", decodedToken.uid)
+      .where("createdAt", ">=", windowStart)
+      .count()
+      .get();
+
+    if (recentCount.data().count >= RATE_LIMIT_MAX) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Du har nådd maks antall forespørsler (5) siste 24 timer. Prøv igjen senere.",
+        },
+        { status: 429 },
+      );
+    }
+
     // 3. Fetch elevations server-side
     const allPoints = [
       { lat: pickup.lat, lng: pickup.lng },

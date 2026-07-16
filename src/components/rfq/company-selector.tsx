@@ -8,14 +8,17 @@ import { Spinner } from "@/components/ui/spinner";
 interface CompanyOption {
   id: string;
   name: string;
+  region: string[];
 }
 
 interface CompanySelectorProps {
   selected: string[];
   onChange: (ids: string[]) => void;
+  /** Lowercase fylke name detected from the pickup point, if any. */
+  region?: string | null;
 }
 
-export function CompanySelector({ selected, onChange }: CompanySelectorProps) {
+export function CompanySelector({ selected, onChange, region }: CompanySelectorProps) {
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +30,11 @@ export function CompanySelector({ selected, onChange }: CompanySelectorProps) {
         snap.forEach((doc) => {
           const data = doc.data();
           if (data.active !== false) {
-            list.push({ id: doc.id, name: data.name ?? doc.id });
+            list.push({
+              id: doc.id,
+              name: data.name ?? doc.id,
+              region: Array.isArray(data.region) ? data.region : [],
+            });
           }
         });
         list.sort((a, b) => a.name.localeCompare(b.name, "no"));
@@ -74,6 +81,31 @@ export function CompanySelector({ selected, onChange }: CompanySelectorProps) {
     );
   }
 
+  const matching = region
+    ? companies.filter((c) => c.region.some((r) => r.toLowerCase() === region))
+    : [];
+  const matchingIds = new Set(matching.map((c) => c.id));
+  const others = matching.length > 0 ? companies.filter((c) => !matchingIds.has(c.id)) : companies;
+
+  const renderCompany = (c: CompanyOption) => (
+    <label
+      key={c.id}
+      className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
+        selected.includes(c.id)
+          ? "border-blue-500 bg-blue-50"
+          : "border-gray-200 hover:border-gray-300"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={selected.includes(c.id)}
+        onChange={() => toggle(c.id)}
+        className="h-4 w-4 rounded border-gray-300 text-blue-600"
+      />
+      <span className="font-medium">{c.name}</span>
+    </label>
+  );
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -91,26 +123,18 @@ export function CompanySelector({ selected, onChange }: CompanySelectorProps) {
         </button>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2">
-        {companies.map((c) => (
-          <label
-            key={c.id}
-            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
-              selected.includes(c.id)
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <input
-              type="checkbox"
-              checked={selected.includes(c.id)}
-              onChange={() => toggle(c.id)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600"
-            />
-            <span className="font-medium">{c.name}</span>
-          </label>
-        ))}
-      </div>
+      {matching.length > 0 ? (
+        <>
+          <p className="text-xs font-medium text-green-700">
+            📍 Dekker sannsynligvis ditt område
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">{matching.map(renderCompany)}</div>
+          <p className="pt-2 text-xs font-medium text-gray-500">Andre selskaper</p>
+          <div className="grid gap-2 sm:grid-cols-2">{others.map(renderCompany)}</div>
+        </>
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-2">{others.map(renderCompany)}</div>
+      )}
     </div>
   );
 }

@@ -22,8 +22,6 @@ Sett i **Vercel → Project → Settings → Environment Variables**.
 | `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | ✅ | Google Maps JS API-nøkkel (klient) |
 | `NEXT_PUBLIC_BASE_URL` | ✅ | `https://bestillehelikopter.no` (prod) |
 
-> **OBS:** `.env.example` bruker `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, men koden bruker `NEXT_PUBLIC_GOOGLE_MAPS_KEY`. Bruk sistnevnte.
-
 ### Secret (server-side)
 
 | Variabel | Påkrevd | Beskrivelse |
@@ -135,6 +133,7 @@ Brukes i nettleseren for Maps JS API.
    ```
 5. Under **API restrictions** → velg **Restrict key** → aktiver kun:
    - Maps JavaScript API
+   - Geocoding API (brukes klient-side til å foreslå selskaper som dekker hentestedet)
 6. Lagre
 
 ### 4b. Server-nøkkel (`GOOGLE_MAPS_SERVER_KEY`)

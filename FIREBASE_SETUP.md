@@ -25,6 +25,7 @@ firebase deploy --only firestore:indexes
 - `jobs`: (status ASC, createdAt DESC) — admin jobb-liste
 - `jobs`: (status ASC, expiresAt ASC) — auto-delete query
 - `jobs`: (status ASC, acceptedAt ASC) — auto-complete query
+- `jobs`: (customer.firebaseUid ASC, createdAt ASC) — rate-limit-sjekk i POST /api/rfq
 - `ratings`: (companyId ASC, approved ASC, createdAt DESC) — offentlig visning
 - `ratings`: (approved ASC, createdAt DESC) — admin godkjenningskø
 

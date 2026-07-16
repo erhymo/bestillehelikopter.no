@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { MapPicker, type MapMode } from "@/components/map/map-picker";
 import { PickupStep } from "@/components/rfq/pickup-step";
 import { DropsStep } from "@/components/rfq/drops-step";
@@ -16,6 +16,7 @@ import { useFlightEstimate } from "@/hooks/use-flight-estimate";
 import type { GeoPoint, Drop, LoadItem } from "@/types";
 import { formatCoordinate, parseCoordinateInput } from "@/lib/coordinates";
 import { validateEmail } from "@/lib/disposableEmail";
+import { reverseGeocodeRegion } from "@/lib/geocodeRegion";
 import { useAnalytics } from "@/hooks/use-analytics";
 
 interface CustomerData {
@@ -58,6 +59,7 @@ export function RfqForm() {
   const [flexibleDate, setFlexibleDate] = useState(false);
   const [notes, setNotes] = useState("");
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
+  const [pickupRegion, setPickupRegion] = useState<string | null>(null);
   const [showOtp, setShowOtp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -84,6 +86,21 @@ export function RfqForm() {
   }));
 
   const { estimates, totalFlightTimeMin } = useFlightEstimate(pickupGeo, dropsGeo);
+
+  // Suggest companies covering the pickup area (best-effort, never blocking).
+  useEffect(() => {
+    if (!pickup) {
+      setPickupRegion(null);
+      return;
+    }
+    let cancelled = false;
+    reverseGeocodeRegion(pickup.lat, pickup.lng).then((region) => {
+      if (!cancelled) setPickupRegion(region);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pickup]);
 
   // ── Handlers ──
   const handlePickupSet = useCallback(
@@ -415,7 +432,11 @@ export function RfqForm() {
           onEmailBlur={() => checkEmail(customer.email)}
         />
 
-        <CompanySelector selected={selectedCompanyIds} onChange={setSelectedCompanyIds} />
+        <CompanySelector
+          selected={selectedCompanyIds}
+          onChange={setSelectedCompanyIds}
+          region={pickupRegion}
+        />
 
         <ImageUpload
           previews={imageUpload.previews}

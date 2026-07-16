@@ -12,7 +12,7 @@ test.describe("Smoke — Statiske sider", () => {
 
     // "Slik fungerer det"-seksjon
     await expect(page.getByText("Slik fungerer det")).toBeVisible();
-    await expect(page.getByText("Beskriv oppdraget")).toBeVisible();
+    await expect(page.getByText("Beskriv oppdraget", { exact: true })).toBeVisible();
     await expect(page.getByText("Motta tilbud")).toBeVisible();
     await expect(page.getByText("Aksepter eller avslå")).toBeVisible();
   });
@@ -65,7 +65,7 @@ test.describe("Smoke — Skjema-validering", () => {
     await expect(submitButton).toBeVisible();
 
     // Checkbox for vilkår
-    const checkbox = page.getByRole("checkbox");
+    const checkbox = page.getByRole("checkbox", { name: /Jeg har lest og aksepterer/i });
     // When unchecked, submit should be disabled
     await expect(checkbox).not.toBeChecked();
   });
