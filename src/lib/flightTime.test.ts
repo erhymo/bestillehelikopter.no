@@ -3,6 +3,8 @@ import {
   computeFlightTime,
   computeFlightTimeBetweenPoints,
   haversineMeters,
+  getWeightSpeedCapKnots,
+  TURNAROUND_MIN_PER_HIV,
 } from "./flightTime";
 
 // ── Constants for assertions ──────────────────────────────────
@@ -102,6 +104,57 @@ describe("computeFlightTime", () => {
     // Even at extreme slope
     const r = computeFlightTime(1, 0, 100_000);
     expect(r.speedKnots).toBeGreaterThanOrEqual(KNOTS_MIN);
+  });
+
+  it("caps speed for a heavy load even on flat terrain", () => {
+    const r = computeFlightTime(10_000, 0, 0, 1200); // >1000kg → 40kn cap
+    expect(r.speedKnots).toBe(40);
+  });
+
+  it("caps speed for a medium load even on flat terrain", () => {
+    const r = computeFlightTime(10_000, 0, 0, 700); // 500-1000kg → 60kn cap
+    expect(r.speedKnots).toBe(60);
+  });
+
+  it("does not raise speed above the terrain-derived value for a light load", () => {
+    const r = computeFlightTime(10_000, 0, 0, 100); // light load, flat terrain
+    expect(r.speedKnots).toBe(KNOTS_MAX);
+  });
+
+  it("weight cap never raises speed above what terrain slope already allows", () => {
+    // Steep terrain forces 40kn; a light load's 80kn cap should not override that
+    const dist = 1000;
+    const r = computeFlightTime(dist, 0, dist, 100); // 45° slope → 40kn, light load cap 80kn
+    expect(r.speedKnots).toBeCloseTo(KNOTS_MIN, 1);
+  });
+
+  it("ignores weight when not provided (backwards compatible)", () => {
+    const r = computeFlightTime(10_000, 0, 0);
+    expect(r.speedKnots).toBe(KNOTS_MAX);
+  });
+});
+
+describe("getWeightSpeedCapKnots", () => {
+  it("returns 80kn for light loads (<=500kg)", () => {
+    expect(getWeightSpeedCapKnots(0)).toBe(80);
+    expect(getWeightSpeedCapKnots(500)).toBe(80);
+  });
+
+  it("returns 60kn for medium loads (500-1000kg)", () => {
+    expect(getWeightSpeedCapKnots(501)).toBe(60);
+    expect(getWeightSpeedCapKnots(1000)).toBe(60);
+  });
+
+  it("returns 40kn for heavy loads (>1000kg)", () => {
+    expect(getWeightSpeedCapKnots(1001)).toBe(40);
+    expect(getWeightSpeedCapKnots(5000)).toBe(40);
+  });
+});
+
+describe("TURNAROUND_MIN_PER_HIV", () => {
+  it("is a small positive number of minutes", () => {
+    expect(TURNAROUND_MIN_PER_HIV).toBeGreaterThan(0);
+    expect(TURNAROUND_MIN_PER_HIV).toBeLessThan(10);
   });
 });
 

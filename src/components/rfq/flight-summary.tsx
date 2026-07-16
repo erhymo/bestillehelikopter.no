@@ -41,6 +41,9 @@ export function FlightSummary({
                 Høydeforskjell
               </th>
               <th className="px-3 py-2 text-right font-medium text-gray-600">
+                Hiv
+              </th>
+              <th className="px-3 py-2 text-right font-medium text-gray-600">
                 Flytid
               </th>
             </tr>
@@ -57,6 +60,9 @@ export function FlightSummary({
                 <td className="px-3 py-2 text-right text-gray-600">
                   {est.elevGainM} m
                 </td>
+                <td className="px-3 py-2 text-right text-gray-600">
+                  {est.hiveCount}×
+                </td>
                 <td className="px-3 py-2 text-right font-medium">
                   {est.flightTimeMin} min
                 </td>
@@ -66,7 +72,7 @@ export function FlightSummary({
           <tfoot className="bg-blue-50">
             <tr>
               <td
-                colSpan={3}
+                colSpan={4}
                 className="px-3 py-2 font-medium text-blue-900"
               >
                 Totalt estimert flytid

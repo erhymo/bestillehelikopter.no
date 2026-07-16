@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  APIProvider,
-  Map,
-  AdvancedMarker,
-  useMap,
-} from "@vis.gl/react-google-maps";
+import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
 import { DropMarker } from "@/components/map/drop-marker";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -125,11 +120,12 @@ export function MapView({ data }: { data: MapViewData }) {
             className="h-full w-full"
           >
             {/* Pickup marker */}
-            <AdvancedMarker position={{ lat: data.pickup.lat, lng: data.pickup.lng }}>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-sm font-bold text-white shadow-lg ring-2 ring-white">
-                P
-              </div>
-            </AdvancedMarker>
+            <DropMarker
+              lat={data.pickup.lat}
+              lng={data.pickup.lng}
+              label="H"
+              color="green"
+            />
 
             {/* Drop markers */}
             {data.drops.map((drop, i) => (

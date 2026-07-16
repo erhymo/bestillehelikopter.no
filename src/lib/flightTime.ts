@@ -19,6 +19,30 @@ const KNOTS_MIN = 40;
 const MAX_SLOPE_DEG = 45;
 const KN_TO_KMH = 1.852;
 
+// ── Load weight → speed cap ──────────────────────────────────
+// Heavier sling loads require slower, more careful flight. Brackets are
+// deliberately simple defaults (kg thresholds → knot caps) — tune as needed.
+const WEIGHT_CAP_LIGHT_KG = 500;
+const WEIGHT_CAP_MEDIUM_KG = 1000;
+const SPEED_CAP_LIGHT_KN = 80;
+const SPEED_CAP_MEDIUM_KN = 60;
+const SPEED_CAP_HEAVY_KN = 40;
+
+/**
+ * Maximum safe speed (knots) for a given sling-load weight.
+ */
+export function getWeightSpeedCapKnots(weightKg: number): number {
+  if (weightKg <= WEIGHT_CAP_LIGHT_KG) return SPEED_CAP_LIGHT_KN;
+  if (weightKg <= WEIGHT_CAP_MEDIUM_KG) return SPEED_CAP_MEDIUM_KN;
+  return SPEED_CAP_HEAVY_KN;
+}
+
+/**
+ * Minutes spent per hiv hooking/unhooking the load on the ground
+ * (not flight time, but part of the cycle time for each lift).
+ */
+export const TURNAROUND_MIN_PER_HIV = 2;
+
 // ── Result type ───────────────────────────────────────────────
 
 export interface FlightTimeResult {
@@ -63,12 +87,14 @@ export function haversineMeters(
  * @param horizontalDistanceM - Horizontal distance in meters (≥ 0)
  * @param pickupElevation     - Pickup point elevation in meters (can be undefined → treated as 0)
  * @param dropElevation       - Drop point elevation in meters (can be undefined → treated as 0)
+ * @param loadWeightKg        - Weight of the load being carried this leg, if any (caps speed further)
  * @returns FlightTimeResult with slope, speed, and time
  */
 export function computeFlightTime(
   horizontalDistanceM: number,
   pickupElevation?: number,
   dropElevation?: number,
+  loadWeightKg?: number,
 ): FlightTimeResult {
   // Guard: zero or negative distance → instant
   if (horizontalDistanceM <= 0) {
@@ -90,6 +116,10 @@ export function computeFlightTime(
     speedKnots =
       KNOTS_MAX - ((KNOTS_MAX - KNOTS_MIN) * slopeDegrees) / MAX_SLOPE_DEG;
     speedKnots = Math.max(speedKnots, KNOTS_MIN);
+  }
+
+  if (loadWeightKg !== undefined && loadWeightKg > 0) {
+    speedKnots = Math.min(speedKnots, getWeightSpeedCapKnots(loadWeightKg));
   }
 
   const speedKmh = speedKnots * KN_TO_KMH;

@@ -63,6 +63,8 @@ export interface FlightEstimate {
   elevGainM: number;
   slopeDeg: number;
   speedKn: number;
+  /** Number of hiv (round trips) this drop requires. */
+  hiveCount: number;
   flightTimeMin: number;
 }
 
