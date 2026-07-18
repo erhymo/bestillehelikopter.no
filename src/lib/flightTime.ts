@@ -4,20 +4,36 @@
  * Takes raw horizontal distance (meters) and elevation gain (meters)
  * and computes slope, speed, and flight time. No geo/Firestore dependencies.
  *
- * Algorithm:
+ * Algorithm (calibrated to match Vortix's proven model):
  *   1. elevGain = max(0, dropElev - pickupElev)   (negative slope → 0 → 80kn)
- *   2. slopeDeg = atan(elevGain / horizontalDistanceM) × 180/π
- *   3. slopeDeg capped at 45°
- *   4. speedKn  = 80 − (80 − 40) × (slopeDeg / 45), floor 40kn
- *   5. timeSeconds = (horizontalDistanceM / 1000) / (speedKn × 1.852) × 3600
+ *   2. gradient = elevGain × 1852 / horizontalDistanceM   (meters of climb per nautical mile)
+ *   3. speedKn interpolates linearly 80kn → 40kn between gradient 50 → 300 m/nm,
+ *      clamped outside that range (NOT degrees — a plain angle cap badly
+ *      underestimates how much typical Norwegian mountain terrain slows a
+ *      sling-load leg down; this m/nm gradient matches Vortix's calibration)
+ *   4. timeSeconds = (horizontalDistanceM / 1000) / (speedKn × 1.852) × 3600
  */
 
 // ── Constants ─────────────────────────────────────────────────
 
 const KNOTS_MAX = 80;
 const KNOTS_MIN = 40;
-const MAX_SLOPE_DEG = 45;
 const KN_TO_KMH = 1.852;
+const NM_TO_M = 1852;
+
+// ── Terrain gradient → speed ─────────────────────────────────
+// Gradient in meters of climb per nautical mile of horizontal distance.
+// Below G_LOW: flat enough for max speed. Above G_HIGH: steep enough that
+// minimum speed is already required. Linear interpolation in between.
+const G_LOW_M_PER_NM = 50;
+const G_HIGH_M_PER_NM = 300;
+
+function computeWorkSpeedKnots(gradientMPerNm: number): number {
+  if (gradientMPerNm <= G_LOW_M_PER_NM) return KNOTS_MAX;
+  if (gradientMPerNm >= G_HIGH_M_PER_NM) return KNOTS_MIN;
+  const t = (gradientMPerNm - G_LOW_M_PER_NM) / (G_HIGH_M_PER_NM - G_LOW_M_PER_NM);
+  return KNOTS_MAX + t * (KNOTS_MIN - KNOTS_MAX);
+}
 
 // ── Load weight → speed cap ──────────────────────────────────
 // Heavier sling loads require slower, more careful flight. Brackets are
@@ -46,7 +62,7 @@ export const TURNAROUND_MIN_PER_HIV = 2;
 // ── Result type ───────────────────────────────────────────────
 
 export interface FlightTimeResult {
-  /** Slope in degrees (0–45, capped). 0 for negative/zero elevation gain. */
+  /** Slope in degrees, informational only (speed is derived from gradient, not this). 0 for negative/zero elevation gain. */
   slopeDegrees: number;
   /** Interpolated speed in knots (40–80). */
   speedKnots: number;
@@ -102,21 +118,10 @@ export function computeFlightTime(
   }
 
   const elevGain = Math.max(0, (dropElevation ?? 0) - (pickupElevation ?? 0));
+  const slopeDegrees = Math.atan(elevGain / horizontalDistanceM) * (180 / Math.PI);
+  const gradientMPerNm = (elevGain * NM_TO_M) / horizontalDistanceM;
 
-  let slopeDegrees: number;
-  let speedKnots: number;
-
-  if (elevGain === 0) {
-    // Flat or downhill → max speed
-    slopeDegrees = 0;
-    speedKnots = KNOTS_MAX;
-  } else {
-    slopeDegrees = Math.atan(elevGain / horizontalDistanceM) * (180 / Math.PI);
-    slopeDegrees = Math.min(slopeDegrees, MAX_SLOPE_DEG);
-    speedKnots =
-      KNOTS_MAX - ((KNOTS_MAX - KNOTS_MIN) * slopeDegrees) / MAX_SLOPE_DEG;
-    speedKnots = Math.max(speedKnots, KNOTS_MIN);
-  }
+  let speedKnots = computeWorkSpeedKnots(gradientMPerNm);
 
   if (loadWeightKg !== undefined && loadWeightKg > 0) {
     speedKnots = Math.min(speedKnots, getWeightSpeedCapKnots(loadWeightKg));

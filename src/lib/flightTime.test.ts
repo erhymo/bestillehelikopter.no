@@ -41,29 +41,42 @@ describe("computeFlightTime", () => {
     expect(r.speedKnots).toBe(KNOTS_MAX);
   });
 
-  it("interpolates speed linearly for moderate slope", () => {
-    // 45° slope → exactly 40kn
-    // At 45°: elevGain/distance = tan(45°) = 1, so elevGain = distance
-    const dist = 1000;
-    const r = computeFlightTime(dist, 0, dist); // tan(45°) = 1
-    expect(r.slopeDegrees).toBeCloseTo(45, 1);
+  it("gradient at or below 50 m/nm gives max speed (80kn)", () => {
+    // gradient = elevGain × 1852 / dist. dist=1852m, elevGain=50m → 50 m/nm exactly.
+    const r = computeFlightTime(1852, 0, 50);
+    expect(r.speedKnots).toBeCloseTo(KNOTS_MAX, 1);
+  });
+
+  it("gradient at or above 300 m/nm gives min speed (40kn)", () => {
+    // dist=1852m, elevGain=300m → 300 m/nm exactly (the gHigh threshold).
+    const r = computeFlightTime(1852, 0, 300);
     expect(r.speedKnots).toBeCloseTo(KNOTS_MIN, 1);
   });
 
-  it("caps slope at 45° for very steep terrain", () => {
-    // elevGain >> distance → atan > 45°, should cap
+  it("interpolates linearly at the midpoint gradient (175 m/nm → 60kn)", () => {
+    // Halfway between gLow (50) and gHigh (300) → halfway between 80 and 40kn.
+    const dist = 1852;
+    const elevGain = 175; // 175 m/nm at this distance
+    const r = computeFlightTime(dist, 0, elevGain);
+    expect(r.speedKnots).toBeCloseTo(60, 1);
+  });
+
+  it("caps speed at minimum for very steep terrain, well beyond gHigh", () => {
     const r = computeFlightTime(100, 0, 10_000);
-    expect(r.slopeDegrees).toBe(45);
     expect(r.speedKnots).toBeCloseTo(KNOTS_MIN, 1);
   });
 
-  it("caps slope at 45° for extreme vertical (>45°)", () => {
-    // near-vertical: distance=1m, gain=1000m → atan ≈ 89.9°, capped to 45°
+  it("caps speed at minimum for near-vertical terrain", () => {
     const r = computeFlightTime(1, 0, 1000);
-    expect(r.slopeDegrees).toBe(45);
     expect(r.speedKnots).toBeCloseTo(KNOTS_MIN, 1);
     // time should be nonzero since distance > 0
     expect(r.timeSeconds).toBeGreaterThan(0);
+  });
+
+  it("slopeDegrees is informational only and not capped at 45°", () => {
+    // near-vertical: distance=1m, gain=1000m → atan ≈ 89.9°
+    const r = computeFlightTime(1, 0, 1000);
+    expect(r.slopeDegrees).toBeGreaterThan(45);
   });
 
   it("computes correct time for a known scenario", () => {
@@ -88,16 +101,6 @@ describe("computeFlightTime", () => {
     expect(r1.slopeDegrees).toBe(r2.slopeDegrees);
     expect(r1.speedKnots).toBe(r2.speedKnots);
     expect(r1.timeSeconds).toBeCloseTo(r2.timeSeconds, 5);
-  });
-
-  it("computes mid-range slope correctly (22.5° → 60kn)", () => {
-    // At 22.5°: speed = 80 - 40*(22.5/45) = 80 - 20 = 60kn
-    // tan(22.5°) ≈ 0.4142
-    const dist = 1000;
-    const elevGain = Math.tan((22.5 * Math.PI) / 180) * dist;
-    const r = computeFlightTime(dist, 0, elevGain);
-    expect(r.slopeDegrees).toBeCloseTo(22.5, 1);
-    expect(r.speedKnots).toBeCloseTo(60, 1);
   });
 
   it("speed never goes below 40kn", () => {
