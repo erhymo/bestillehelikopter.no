@@ -50,7 +50,9 @@ export function estimateDrop(
     slopeDeg: Math.round(slopeDegrees * 10) / 10,
     speedKn: Math.round(speedKnots * 10) / 10,
     hiveCount,
-    flightTimeMin: Math.round(flightTimeMin * 10) / 10,
+    // Round up, never down — an optimistic estimate is worse than a
+    // slightly conservative one for something companies price against.
+    flightTimeMin: Math.ceil(flightTimeMin),
   };
 }
 
@@ -62,10 +64,9 @@ export function estimateAll(
   drops: Drop[],
 ): { estimates: FlightEstimate[]; totalFlightTimeMin: number } {
   const estimates = drops.map((drop, i) => estimateDrop(pickup, drop, i));
-  const totalFlightTimeMin =
-    Math.round(
-      estimates.reduce((sum, e) => sum + e.flightTimeMin, 0) * 10,
-    ) / 10;
+  // Each estimate is already a whole minute, so the sum is too — this
+  // keeps the total matching what the per-row breakdown actually shows.
+  const totalFlightTimeMin = estimates.reduce((sum, e) => sum + e.flightTimeMin, 0);
   return { estimates, totalFlightTimeMin };
 }
 

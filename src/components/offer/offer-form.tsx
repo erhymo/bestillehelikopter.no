@@ -104,7 +104,7 @@ export function OfferForm({
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Est. flytid</span>
-          <span className="font-medium">{totalFlightTimeMin.toFixed(1)} min</span>
+          <span className="font-medium">{Math.ceil(totalFlightTimeMin)} min</span>
         </div>
       </div>
 

@@ -184,7 +184,7 @@ export function MapView({ data }: { data: MapViewData }) {
           <div className="flex justify-between border-t pt-2">
             <span className="font-semibold text-gray-700">Total flytid</span>
             <span className="font-bold text-brand-700">
-              {data.totalFlightTimeMin.toFixed(1)} min
+              {Math.ceil(data.totalFlightTimeMin)} min
             </span>
           </div>
         </div>
@@ -243,7 +243,7 @@ export function MapView({ data }: { data: MapViewData }) {
                       +{Math.round(est.elevGainM)} m
                     </span>
                     <span className="font-semibold text-brand-700">
-                      {est.flightTimeMin.toFixed(1)} min
+                      {Math.ceil(est.flightTimeMin)} min
                     </span>
                   </div>
                 )}

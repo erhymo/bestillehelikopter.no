@@ -21,11 +21,17 @@ describe("estimateDrop", () => {
     const oneHiv = estimateDrop(pickup, makeDrop({ hpieces: 1 }), 0);
     const fiveHiv = estimateDrop(pickup, makeDrop({ hpieces: 5 }), 0);
 
-    // 5 hiv should cost ~5x the per-hiv cycle time (round trip + turnaround),
-    // not the same as 1 hiv and not just 5x the one-way leg.
-    const perHivMin = oneHiv.flightTimeMin;
-    expect(fiveHiv.flightTimeMin).toBeCloseTo(perHivMin * 5, 0);
+    // 5 hiv costs roughly 5x the per-hiv cycle time (round trip + turnaround)
+    // — not the same as 1 hiv, and not just 5x the one-way leg. Ceiling to a
+    // whole minute happens once on the total, so this won't land exactly.
+    expect(fiveHiv.flightTimeMin).toBeGreaterThan(oneHiv.flightTimeMin * 4);
+    expect(fiveHiv.flightTimeMin).toBeLessThanOrEqual(oneHiv.flightTimeMin * 5);
     expect(fiveHiv.hiveCount).toBe(5);
+  });
+
+  it("rounds flight time up to the nearest whole minute", () => {
+    const est = estimateDrop(pickup, makeDrop({ hpieces: 1 }), 0);
+    expect(Number.isInteger(est.flightTimeMin)).toBe(true);
   });
 
   it("treats hpieces of 0 or negative as at least 1 hiv", () => {
@@ -82,8 +88,6 @@ describe("estimateAll", () => {
   it("sums per-drop flight time (each already accounting for its own hiv count)", () => {
     const drops = [makeDrop({ hpieces: 2 }), makeDrop({ hpieces: 3 })];
     const { estimates, totalFlightTimeMin } = estimateAll(pickup, drops);
-    const expectedTotal =
-      Math.round((estimates[0]!.flightTimeMin + estimates[1]!.flightTimeMin) * 10) / 10;
-    expect(totalFlightTimeMin).toBeCloseTo(expectedTotal, 1);
+    expect(totalFlightTimeMin).toBe(estimates[0]!.flightTimeMin + estimates[1]!.flightTimeMin);
   });
 });

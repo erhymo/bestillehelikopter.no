@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { CheckCircle2, TriangleAlert } from "lucide-react";
 import { MapPicker, type MapMode } from "@/components/map/map-picker";
 import { MapToolbar } from "@/components/rfq/map-toolbar";
@@ -16,6 +16,7 @@ import { Modal } from "@/components/ui/modal";
 import { usePhoneAuth } from "@/hooks/use-phone-auth";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { useFlightEstimate } from "@/hooks/use-flight-estimate";
+import { useLiveElevations } from "@/hooks/use-live-elevations";
 import type { GeoPoint, Drop, LoadItem } from "@/types";
 import { formatCoordinate, parseCoordinateInput } from "@/lib/coordinates";
 import { validateEmail } from "@/lib/disposableEmail";
@@ -76,15 +77,27 @@ export function RfqForm() {
   const imageUpload = useImageUpload();
   const { trackFunnel } = useAnalytics("customer_form");
 
-  // Build GeoPoints for flight estimate (elevation = 0 client-side, server fetches real)
+  // Real elevations for the live preview (debounced, best-effort — falls
+  // back to flat/0 until the first lookup resolves) so the estimate the
+  // customer watches update while placing points already reflects terrain,
+  // instead of only becoming accurate after submission.
+  const allPoints = useMemo(() => {
+    const pts: { lat: number; lng: number }[] = [];
+    if (pickup) pts.push(pickup);
+    drops.forEach((d) => pts.push({ lat: d.lat, lng: d.lng }));
+    return pts;
+  }, [pickup, drops]);
+
+  const liveElevations = useLiveElevations(allPoints);
+
   const pickupGeo: GeoPoint | null = pickup
-    ? { lat: pickup.lat, lng: pickup.lng, elevation: 0 }
+    ? { lat: pickup.lat, lng: pickup.lng, elevation: liveElevations[0] ?? 0 }
     : null;
 
-  const dropsGeo: Drop[] = drops.map((d) => ({
+  const dropsGeo: Drop[] = drops.map((d, i) => ({
     lat: d.lat,
     lng: d.lng,
-    elevation: 0,
+    elevation: liveElevations[pickup ? i + 1 : i] ?? 0,
     hpieces: d.hpieces,
     loadItems: d.loadItems,
   }));
