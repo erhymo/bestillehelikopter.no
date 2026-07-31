@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, X } from "lucide-react";
 import { useAnalytics } from "@/hooks/use-analytics";
 
 interface OfferFormProps {
@@ -184,8 +184,19 @@ export function OfferForm({
           className="w-full rounded-lg border px-4 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-brand-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
         />
         {attachment && (
-          <p className="mt-1 text-xs text-gray-600">
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-600">
             {attachment.name} ({(attachment.size / 1024).toFixed(0)} KB)
+            <button
+              type="button"
+              onClick={() => {
+                setAttachment(null);
+                if (fileRef.current) fileRef.current.value = "";
+              }}
+              className="text-red-500 hover:text-red-700"
+              title="Fjern vedlegg"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </p>
         )}
       </div>

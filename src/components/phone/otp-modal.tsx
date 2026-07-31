@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,18 @@ export function OtpModal({
 }: OtpModalProps) {
   const [step, setStep] = useState<"send" | "verify">("send");
   const [code, setCode] = useState("");
+
+  // Start fresh next time the modal opens, rather than showing a stale
+  // verification step or leftover code from a previous, abandoned attempt.
+  useEffect(() => {
+    if (!open) {
+      // Intentional: resets internal step/code state to match the `open`
+      // prop closing, not a data fetch.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStep("send");
+      setCode("");
+    }
+  }, [open]);
 
   const handleSend = async () => {
     await onSendOtp(phone);
@@ -86,7 +98,10 @@ export function OtpModal({
           <div className="flex gap-3">
             <Button
               variant="secondary"
-              onClick={() => setStep("send")}
+              onClick={() => {
+                setStep("send");
+                setCode("");
+              }}
               disabled={loading}
             >
               Send på nytt

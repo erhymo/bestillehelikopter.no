@@ -389,7 +389,11 @@ export function RfqForm() {
       {/* Coordinate paste modal */}
       <Modal
         open={showCoordinateModal}
-        onClose={() => setShowCoordinateModal(false)}
+        onClose={() => {
+          setShowCoordinateModal(false);
+          setCoordinateInput("");
+          setCoordinateError(null);
+        }}
         title={`Lim inn koordinat for ${coordinateTargetLabel}`}
       >
         <div className="flex gap-2">

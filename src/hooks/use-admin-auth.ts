@@ -15,6 +15,7 @@ interface AdminAuthState {
   loading: boolean;
   isAdmin: boolean;
   idToken: string | null;
+  signInError: string | null;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -26,6 +27,7 @@ export function useAdminAuth(): AdminAuthState {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [idToken, setIdToken] = useState<string | null>(null);
+  const [signInError, setSignInError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -47,10 +49,21 @@ export function useAdminAuth(): AdminAuthState {
   }, []);
 
   const signIn = useCallback(async () => {
+    setSignInError(null);
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       console.error("[admin-auth] Sign-in failed:", err);
+      const code = (err as { code?: string })?.code;
+      if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+        // User closed the popup themselves — not an error worth surfacing.
+        return;
+      }
+      setSignInError(
+        code === "auth/popup-blocked"
+          ? "Nettleseren blokkerte innloggingsvinduet. Tillat popup-vinduer for denne siden og prøv igjen."
+          : "Innlogging feilet. Prøv igjen.",
+      );
     }
   }, []);
 
@@ -58,6 +71,6 @@ export function useAdminAuth(): AdminAuthState {
     await firebaseSignOut(auth);
   }, []);
 
-  return { user, loading, isAdmin, idToken, signIn, signOut };
+  return { user, loading, isAdmin, idToken, signInError, signIn, signOut };
 }
 

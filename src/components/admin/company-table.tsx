@@ -32,6 +32,7 @@ export function CompanyTable() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<CompanyFormData>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const fetchCompanies = useCallback(async () => {
     if (!idToken) return;
@@ -80,12 +81,14 @@ export function CompanyTable() {
 
   const handleToggle = async (id: string, disabled: boolean) => {
     if (!idToken) return;
+    setTogglingId(id);
     await fetch("/api/admin/companies", {
       method: "PATCH",
       headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ id, disabled }),
     });
-    fetchCompanies();
+    await fetchCompanies();
+    setTogglingId(null);
   };
 
   const startEdit = (c: CompanyRow) => {
@@ -171,8 +174,9 @@ export function CompanyTable() {
                     <button onClick={() => startEdit(c)}
                       className="mr-2 text-xs text-blue-600 hover:underline">Rediger</button>
                     <button onClick={() => handleToggle(c.id, !c.disabled)}
-                      className={`text-xs ${c.disabled ? "text-green-600" : "text-red-600"} hover:underline`}>
-                      {c.disabled ? "Aktiver" : "Deaktiver"}
+                      disabled={togglingId === c.id}
+                      className={`text-xs ${c.disabled ? "text-green-600" : "text-red-600"} hover:underline disabled:opacity-50 disabled:no-underline`}>
+                      {togglingId === c.id ? "…" : c.disabled ? "Aktiver" : "Deaktiver"}
                     </button>
                   </td>
                 </tr>

@@ -25,7 +25,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, isAdmin, signIn, signOut } = useAdminAuth();
+  const { user, loading, isAdmin, signInError, signIn, signOut } = useAdminAuth();
   const pathname = usePathname();
 
   // Loading state
@@ -44,6 +44,9 @@ export default function AdminLayout({
         <div className="w-full max-w-sm rounded-lg bg-white p-8 text-center shadow-lg">
           <h1 className="mb-2 text-xl font-bold text-brand-700">Admin</h1>
           <p className="mb-6 text-sm text-gray-600">Logg inn for å fortsette</p>
+          {signInError && (
+            <p className="mb-4 text-sm text-red-600">{signInError}</p>
+          )}
           <button
             onClick={signIn}
             className="w-full rounded-lg bg-brand-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
