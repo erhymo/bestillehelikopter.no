@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { CheckCircle2, TriangleAlert } from "lucide-react";
 import { MapPicker, type MapMode } from "@/components/map/map-picker";
 import { MapToolbar } from "@/components/rfq/map-toolbar";
 import { PickupStep } from "@/components/rfq/pickup-step";
@@ -345,7 +346,7 @@ export function RfqForm() {
   if (submitted) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <div className="text-5xl">✅</div>
+        <CheckCircle2 className="h-16 w-16 text-green-600" />
         <h2 className="text-2xl font-bold text-gray-900">Forespørselen din er mottatt!</h2>
         <p className="max-w-md text-gray-600">
           Du vil motta et tilbud på e-post dersom oppdraget kan gjennomføres.
@@ -404,7 +405,7 @@ export function RfqForm() {
               if (e.key === "Enter") handleCoordinateSubmit();
             }}
             placeholder="60.472024, 5.322054"
-            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
           />
           <Button variant="secondary" onClick={handleCoordinateSubmit} className="shrink-0 text-xs">
             Bruk
@@ -522,8 +523,8 @@ export function RfqForm() {
           {submitError && <p className="text-sm text-red-600">{submitError}</p>}
 
           {!phoneAuth.verified && customer.phone && (
-            <p className="text-xs text-amber-600">
-              ⚠ Telefonnummeret må verifiseres før du kan sende forespørselen.
+            <p className="flex items-center gap-1 text-xs text-amber-600">
+              <TriangleAlert className="h-3.5 w-3.5 shrink-0" /> Telefonnummeret må verifiseres før du kan sende forespørselen.
             </p>
           )}
 

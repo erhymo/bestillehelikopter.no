@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { LoadItem } from "@/types";
@@ -121,9 +122,14 @@ export function DropsStep({
             <button
               type="button"
               onClick={() => toggleExpanded(di)}
-              className="text-xs text-gray-500 hover:text-gray-700"
+              className="inline-flex items-center gap-0.5 text-xs text-gray-500 hover:text-gray-700"
             >
-              {expanded.has(di) ? "▾" : "▸"} Last
+              {expanded.has(di) ? (
+                <ChevronDown className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
+              Last
               {drop.loadItems.length > 0 ? ` (${drop.loadItems.length})` : ""}
             </button>
           </div>
@@ -162,7 +168,7 @@ export function DropsStep({
                     className="mb-1 text-red-500 hover:text-red-700"
                     title="Fjern"
                   >
-                    ✕
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ))}

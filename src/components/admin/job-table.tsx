@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { Mail, MousePointerClick } from "lucide-react";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 interface OfferRow {
@@ -140,8 +141,16 @@ export function JobTable() {
                                     <th className="py-1 text-left">Selskap</th>
                                     <th className="py-1 text-left">Status</th>
                                     <th className="py-1 text-right">Pris</th>
-                                    <th className="py-1 text-right">📧 Åpnet</th>
-                                    <th className="py-1 text-right">🔗 Klikk</th>
+                                    <th className="py-1 text-right">
+                                      <span className="inline-flex items-center gap-1">
+                                        <Mail className="h-3 w-3" /> Åpnet
+                                      </span>
+                                    </th>
+                                    <th className="py-1 text-right">
+                                      <span className="inline-flex items-center gap-1">
+                                        <MousePointerClick className="h-3 w-3" /> Klikk
+                                      </span>
+                                    </th>
                                   </tr>
                                 </thead>
                                 <tbody>

@@ -87,7 +87,7 @@ export function MapPicker({
             type="button"
             onClick={() => setMapType(id)}
             className={`rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
-              mapType === id ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
+              mapType === id ? "bg-brand-700 text-white" : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             {label}

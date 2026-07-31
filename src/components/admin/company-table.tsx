@@ -99,7 +99,7 @@ export function CompanyTable() {
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => { setEditId(null); setForm(EMPTY_FORM); setShowForm(true); }}
-          className="rounded-md bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a4f7f]"
+          className="rounded-md bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
         >
           + Legg til selskap
         </button>

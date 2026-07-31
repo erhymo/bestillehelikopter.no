@@ -153,7 +153,7 @@ export function CustomerInfoStep({
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
           rows={3}
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           placeholder="Spesielle behov, tidspunkt, tilgjengelighet på stedet…"
         />
       </div>

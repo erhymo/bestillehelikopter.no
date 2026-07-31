@@ -3,13 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Building2,
+  Star,
+  TrendingUp,
+} from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/admin", label: "Oversikt", icon: "📊" },
-  { href: "/admin/jobber", label: "Jobber", icon: "📋" },
-  { href: "/admin/selskaper", label: "Selskaper", icon: "🏢" },
-  { href: "/admin/vurderinger", label: "Vurderinger", icon: "⭐" },
-  { href: "/admin/statistikk", label: "Statistikk", icon: "📈" },
+  { href: "/admin", label: "Oversikt", icon: LayoutDashboard },
+  { href: "/admin/jobber", label: "Jobber", icon: ClipboardList },
+  { href: "/admin/selskaper", label: "Selskaper", icon: Building2 },
+  { href: "/admin/vurderinger", label: "Vurderinger", icon: Star },
+  { href: "/admin/statistikk", label: "Statistikk", icon: TrendingUp },
 ];
 
 export default function AdminLayout({
@@ -34,11 +41,11 @@ export default function AdminLayout({
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
         <div className="w-full max-w-sm rounded-lg bg-white p-8 text-center shadow-lg">
-          <h1 className="mb-2 text-xl font-bold text-[#1e3a5f]">Admin</h1>
+          <h1 className="mb-2 text-xl font-bold text-brand-700">Admin</h1>
           <p className="mb-6 text-sm text-gray-600">Logg inn for å fortsette</p>
           <button
             onClick={signIn}
-            className="w-full rounded-md bg-[#1e3a5f] px-4 py-3 font-semibold text-white transition-colors hover:bg-[#2a4f7f]"
+            className="w-full rounded-md bg-brand-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
           >
             Logg inn med Google
           </button>
@@ -73,22 +80,23 @@ export default function AdminLayout({
       {/* Sidebar */}
       <aside className="w-56 shrink-0 border-r border-gray-200 bg-white">
         <div className="border-b border-gray-200 px-4 py-4">
-          <h1 className="text-lg font-bold text-[#1e3a5f]">🚁 Admin</h1>
+          <h1 className="text-lg font-bold text-brand-700">🚁 Admin</h1>
         </div>
         <nav className="flex flex-col gap-1 p-2">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-[#1e3a5f] text-white"
+                    ? "bg-brand-700 text-white"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                <span>{item.icon}</span>
+                <Icon className="h-4 w-4 shrink-0" />
                 {item.label}
               </Link>
             );

@@ -153,7 +153,7 @@ export function MapView({ data }: { data: MapViewData }) {
               onClick={() => setMapType(id)}
               className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                 mapType === id
-                  ? "bg-[#1e3a5f] text-white"
+                  ? "bg-brand-700 text-white"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -165,7 +165,7 @@ export function MapView({ data }: { data: MapViewData }) {
 
       {/* Sidebar */}
       <div className="w-full overflow-y-auto border-t bg-white p-6 lg:w-96 lg:border-l lg:border-t-0">
-        <h1 className="mb-4 text-xl font-bold text-[#1e3a5f]">
+        <h1 className="mb-4 text-xl font-bold text-brand-700">
           Forespørselsdetaljer
         </h1>
 
@@ -183,7 +183,7 @@ export function MapView({ data }: { data: MapViewData }) {
           )}
           <div className="flex justify-between border-t pt-2">
             <span className="font-semibold text-gray-700">Total flytid</span>
-            <span className="font-bold text-[#1e3a5f]">
+            <span className="font-bold text-brand-700">
               {data.totalFlightTimeMin.toFixed(1)} min
             </span>
           </div>
@@ -242,7 +242,7 @@ export function MapView({ data }: { data: MapViewData }) {
                     <span className="text-gray-600">
                       +{Math.round(est.elevGainM)} m
                     </span>
-                    <span className="font-semibold text-[#1e3a5f]">
+                    <span className="font-semibold text-brand-700">
                       {est.flightTimeMin.toFixed(1)} min
                     </span>
                   </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { useAnalytics } from "@/hooks/use-analytics";
 
 interface OfferFormProps {
@@ -78,7 +79,7 @@ export function OfferForm({
   if (submitted) {
     return (
       <div className="rounded-lg border border-green-200 bg-green-50 p-8 text-center">
-        <div className="mb-3 text-4xl">✅</div>
+        <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-green-600" />
         <h2 className="mb-2 text-xl font-bold text-green-800">
           Tilbudet er sendt!
         </h2>
@@ -118,7 +119,7 @@ export function OfferForm({
           step="1"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          className="w-full rounded-lg border px-4 py-2.5 focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]"
+          className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
           placeholder="f.eks. 45000"
           required
         />
@@ -135,7 +136,7 @@ export function OfferForm({
             step="1"
             value={hourlyRate}
             onChange={(e) => setHourlyRate(e.target.value)}
-            className="w-full rounded-lg border px-4 py-2.5 focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]"
+            className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
             placeholder="f.eks. 25000"
           />
         </div>
@@ -149,7 +150,7 @@ export function OfferForm({
             step="1"
             value={hivRate}
             onChange={(e) => setHivRate(e.target.value)}
-            className="w-full rounded-lg border px-4 py-2.5 focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]"
+            className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
             placeholder="f.eks. 35000"
           />
         </div>
@@ -165,7 +166,7 @@ export function OfferForm({
           onChange={(e) => setComment(e.target.value)}
           rows={4}
           maxLength={2000}
-          className="w-full rounded-lg border px-4 py-2.5 focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]"
+          className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
           placeholder="Beskriv tilbudet nærmere, inkluder helikoptertype, tilgjengelighet, betingelser etc."
         />
       </div>
@@ -180,7 +181,7 @@ export function OfferForm({
           type="file"
           accept="application/pdf"
           onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
-          className="w-full rounded-lg border px-4 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#1e3a5f] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
+          className="w-full rounded-lg border px-4 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-brand-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
         />
         {attachment && (
           <p className="mt-1 text-xs text-gray-600">
@@ -200,7 +201,7 @@ export function OfferForm({
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-lg bg-[#1e3a5f] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#15304f] disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-lg bg-brand-700 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? "Sender…" : "Send tilbud"}
       </button>

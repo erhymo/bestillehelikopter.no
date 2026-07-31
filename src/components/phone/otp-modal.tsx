@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export function OtpModal({
     <Modal open={open} onClose={onClose} title="Verifiser telefonnummer">
       {verified ? (
         <div className="flex flex-col items-center gap-3 py-4">
-          <div className="text-3xl">✅</div>
+          <CheckCircle2 className="h-10 w-10 text-green-600" />
           <p className="text-sm text-gray-600">
             Telefonnummeret er verifisert!
           </p>

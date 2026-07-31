@@ -1,3 +1,4 @@
+import { CheckCircle2, Info, Star } from "lucide-react";
 import { verifyOfferToken, buildRatingUrl } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
 import { OfferStatus, JobStatus } from "@/types";
@@ -80,10 +81,14 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
-          <div className="mb-3 text-center text-4xl">
-            {isThisOffer ? "✅" : "ℹ️"}
+          <div className="mb-3 flex justify-center">
+            {isThisOffer ? (
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            ) : (
+              <Info className="h-10 w-10 text-blue-500" />
+            )}
           </div>
-          <h1 className="mb-2 text-center text-xl font-bold text-[#1e3a5f]">
+          <h1 className="mb-2 text-center text-xl font-bold text-brand-700">
             {isThisOffer
               ? "Tilbudet er allerede akseptert"
               : "Et annet tilbud er akseptert"}
@@ -96,9 +101,9 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
           {isThisOffer && (
             <Link
               href={buildRatingUrl(token)}
-              className="mt-4 inline-block rounded-md bg-[#1e3a5f] px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2a4f7f]"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-brand-700 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-600"
             >
-              ⭐ Gi vurdering
+              <Star className="h-4 w-4" /> Gi vurdering
             </Link>
           )}
         </div>
@@ -111,7 +116,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
-          <h1 className="mb-2 text-xl font-bold text-[#1e3a5f]">
+          <h1 className="mb-2 text-xl font-bold text-brand-700">
             Tilbudet er ikke klart
           </h1>
           <p className="text-gray-600">
@@ -127,7 +132,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-xl font-bold text-[#1e3a5f]">
+        <h1 className="mb-2 text-xl font-bold text-brand-700">
           Aksepter tilbud
         </h1>
         <p className="mb-6 text-sm text-gray-600">
@@ -142,7 +147,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Totalpris</span>
-            <span className="text-lg font-bold text-[#1e3a5f]">
+            <span className="text-lg font-bold text-brand-700">
               {offerData.price?.toLocaleString("nb-NO")} NOK
             </span>
           </div>

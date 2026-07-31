@@ -1,5 +1,6 @@
 "use client";
 
+import { Plus, Crosshair, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MapToolbarProps {
@@ -69,22 +70,27 @@ export function MapToolbar({
         type="button"
         variant={addDropButtonActive ? "primary" : "secondary"}
         onClick={onAddDrop}
-        className="text-xs"
+        className="gap-1 text-xs"
       >
-        + Leveringspunkt
+        <Plus className="h-3.5 w-3.5" /> Leveringspunkt
       </Button>
 
-      <Button type="button" variant="secondary" onClick={onOpenCoordinates} className="text-xs">
-        Koordinat
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={onOpenCoordinates}
+        className="gap-1 text-xs"
+      >
+        <Crosshair className="h-3.5 w-3.5" /> Koordinat
       </Button>
 
       <Button
         type="button"
         variant="secondary"
         onClick={onReset}
-        className="ml-auto text-xs text-gray-600"
+        className="ml-auto gap-1 text-xs text-gray-600"
       >
-        ↺ Nullstill skjema
+        <RotateCcw className="h-3.5 w-3.5" /> Nullstill skjema
       </Button>
     </div>
   );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
   title: "Vilkår for bruk — BestilleHelikopter.no",
@@ -7,8 +8,11 @@ export const metadata = {
 export default function VilkarPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link href="/" className="mb-6 inline-block text-sm text-blue-600 hover:underline">
-        ← Tilbake til forsiden
+      <Link
+        href="/"
+        className="mb-6 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+      >
+        <ArrowLeft className="h-4 w-4" /> Tilbake til forsiden
       </Link>
 
       <h1 className="mb-6 text-3xl font-bold text-gray-900">Vilkår for bruk</h1>

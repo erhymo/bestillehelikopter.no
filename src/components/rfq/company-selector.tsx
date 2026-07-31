@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
+import { MapPin } from "lucide-react";
 import { db } from "@/lib/firebase/client";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -125,8 +126,8 @@ export function CompanySelector({ selected, onChange, region }: CompanySelectorP
 
       {matching.length > 0 ? (
         <>
-          <p className="text-xs font-medium text-green-700">
-            📍 Dekker sannsynligvis ditt område
+          <p className="flex items-center gap-1 text-xs font-medium text-green-700">
+            <MapPin className="h-3.5 w-3.5" /> Dekker sannsynligvis ditt område
           </p>
           <div className="grid gap-2 sm:grid-cols-2">{matching.map(renderCompany)}</div>
           <p className="pt-2 text-xs font-medium text-gray-500">Andre selskaper</p>

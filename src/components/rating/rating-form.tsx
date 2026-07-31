@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PartyPopper, Star } from "lucide-react";
 import { useAnalytics } from "@/hooks/use-analytics";
 
 interface RatingFormProps {
@@ -56,8 +57,8 @@ export default function RatingForm({ token, companyName }: RatingFormProps) {
   if (success) {
     return (
       <div className="text-center">
-        <div className="mb-3 text-5xl">🎉</div>
-        <h2 className="mb-2 text-lg font-bold text-[#1e3a5f]">Takk for din vurdering!</h2>
+        <PartyPopper className="mx-auto mb-3 h-14 w-14 text-brand-600" />
+        <h2 className="mb-2 text-lg font-bold text-brand-700">Takk for din vurdering!</h2>
         <p className="text-gray-600">
           Du ga {companyName}{" "}
           <span className="font-semibold">{score} av 5</span> stjerner.
@@ -80,13 +81,17 @@ export default function RatingForm({ token, companyName }: RatingFormProps) {
             <button
               key={star}
               type="button"
-              className="text-4xl transition-transform hover:scale-110 focus:outline-none"
+              className="transition-transform hover:scale-110 focus:outline-none"
               onMouseEnter={() => setHoverScore(star)}
               onMouseLeave={() => setHoverScore(0)}
               onClick={() => setScore(star)}
               aria-label={`${star} stjerner`}
             >
-              {star <= activeScore ? "⭐" : "☆"}
+              <Star
+                className={`h-9 w-9 ${
+                  star <= activeScore ? "fill-yellow-400 text-yellow-400" : "fill-none text-gray-300"
+                }`}
+              />
             </button>
           ))}
         </div>
@@ -109,7 +114,7 @@ export default function RatingForm({ token, companyName }: RatingFormProps) {
           maxLength={1000}
           rows={3}
           placeholder="Fortell om din opplevelse..."
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f] focus:outline-none"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-700 focus:ring-1 focus:ring-brand-700 focus:outline-none"
         />
         <p className="mt-1 text-xs text-gray-600">{comment.length}/1000</p>
       </div>
@@ -121,7 +126,7 @@ export default function RatingForm({ token, companyName }: RatingFormProps) {
       <button
         type="submit"
         disabled={submitting || score === 0}
-        className="w-full rounded-md bg-[#1e3a5f] px-4 py-3 font-semibold text-white transition-colors hover:bg-[#2a4f7f] disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-md bg-brand-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? "Sender..." : "Send vurdering"}
       </button>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { Mail, CheckCircle2, XCircle } from "lucide-react";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 interface QuickStats {
@@ -17,7 +18,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [emailForm, setEmailForm] = useState({ to: "", subject: "", text: "" });
   const [emailSending, setEmailSending] = useState(false);
-  const [emailStatus, setEmailStatus] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<"success" | "error" | null>(null);
 
   const fetchQuickStats = useCallback(async () => {
     if (!idToken) return;
@@ -60,24 +61,24 @@ export default function AdminPage() {
       body: JSON.stringify(emailForm),
     });
     if (res.ok) {
-      setEmailStatus("✅ E-post sendt!");
+      setEmailStatus("success");
       setEmailForm({ to: "", subject: "", text: "" });
     } else {
-      setEmailStatus("❌ Feil ved sending");
+      setEmailStatus("error");
     }
     setEmailSending(false);
   };
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-[#1e3a5f]">Oversikt</h1>
+      <h1 className="mb-6 text-2xl font-bold text-brand-700">Oversikt</h1>
 
       {loading ? (
         <p className="text-sm text-gray-600">Laster...</p>
       ) : stats ? (
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Link href="/admin/jobber" className="rounded-lg border bg-white p-4 text-center hover:shadow-md transition-shadow">
-            <p className="text-3xl font-bold text-[#1e3a5f]">{stats.jobCount}</p>
+            <p className="text-3xl font-bold text-brand-700">{stats.jobCount}</p>
             <p className="text-xs text-gray-600">Totalt jobber</p>
           </Link>
           <Link href="/admin/jobber?status=open" className="rounded-lg border bg-white p-4 text-center hover:shadow-md transition-shadow">
@@ -97,7 +98,9 @@ export default function AdminPage() {
 
       {/* Send email to customer */}
       <div className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold text-gray-700">📧 Send e-post til kunde</h2>
+        <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+          <Mail className="h-4 w-4" /> Send e-post til kunde
+        </h2>
         <div className="grid gap-3">
           <input
             placeholder="Til (e-postadresse)"
@@ -122,11 +125,20 @@ export default function AdminPage() {
             <button
               onClick={handleSendEmail}
               disabled={emailSending || !emailForm.to || !emailForm.subject || !emailForm.text}
-              className="rounded-md bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a4f7f] disabled:opacity-50"
+              className="rounded-md bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
             >
               {emailSending ? "Sender..." : "Send e-post"}
             </button>
-            {emailStatus && <span className="text-sm">{emailStatus}</span>}
+            {emailStatus === "success" && (
+              <span className="flex items-center gap-1 text-sm text-green-700">
+                <CheckCircle2 className="h-4 w-4" /> E-post sendt!
+              </span>
+            )}
+            {emailStatus === "error" && (
+              <span className="flex items-center gap-1 text-sm text-red-700">
+                <XCircle className="h-4 w-4" /> Feil ved sending
+              </span>
+            )}
           </div>
         </div>
       </div>

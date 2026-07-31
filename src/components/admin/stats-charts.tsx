@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { BarChart3, TrendingUp } from "lucide-react";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 interface MonthRow {
@@ -86,7 +87,7 @@ export function StatsCharts() {
             { label: "Fullført", value: totals.completed },
           ].map((s) => (
             <div key={s.label} className="rounded-lg border border-gray-200 bg-white p-4 text-center">
-              <p className="text-2xl font-bold text-[#1e3a5f]">{s.value}</p>
+              <p className="text-2xl font-bold text-brand-700">{s.value}</p>
               <p className="text-xs text-gray-600">{s.label}</p>
             </div>
           ))}
@@ -154,7 +155,9 @@ export function StatsCharts() {
       {/* Today's analytics */}
       {todayAnalytics && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-gray-700">📊 I dag ({todayAnalytics.date})</h3>
+          <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+            <BarChart3 className="h-4 w-4" /> I dag ({todayAnalytics.date})
+          </h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {Object.entries(todayAnalytics.pageViews).map(([page, count]) => (
               <div key={page} className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-center">
@@ -179,7 +182,9 @@ export function StatsCharts() {
       {/* Monthly analytics */}
       {analyticsMonthly.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-gray-700">📈 Sidevisninger per måned</h3>
+          <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+            <TrendingUp className="h-4 w-4" /> Sidevisninger per måned
+          </h3>
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50">

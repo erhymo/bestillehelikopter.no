@@ -1,3 +1,4 @@
+import { Lock, XCircle, Clock, Star } from "lucide-react";
 import { verifyOfferToken } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
 import { JobStatus } from "@/types";
@@ -17,8 +18,8 @@ export default async function RatePage({ params }: Props) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg text-center">
-          <div className="mb-3 text-4xl">🔒</div>
-          <h1 className="mb-2 text-xl font-bold text-[#1e3a5f]">Ugyldig lenke</h1>
+          <Lock className="mx-auto mb-3 h-10 w-10 text-gray-400" />
+          <h1 className="mb-2 text-xl font-bold text-brand-700">Ugyldig lenke</h1>
           <p className="text-gray-600">Lenken er ugyldig eller utløpt.</p>
         </div>
       </div>
@@ -41,8 +42,8 @@ export default async function RatePage({ params }: Props) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg text-center">
-          <div className="mb-3 text-4xl">❌</div>
-          <h1 className="mb-2 text-xl font-bold text-[#1e3a5f]">Ikke funnet</h1>
+          <XCircle className="mx-auto mb-3 h-10 w-10 text-red-500" />
+          <h1 className="mb-2 text-xl font-bold text-brand-700">Ikke funnet</h1>
           <p className="text-gray-600">Oppdraget eller selskapet ble ikke funnet.</p>
         </div>
       </div>
@@ -61,8 +62,8 @@ export default async function RatePage({ params }: Props) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg text-center">
-          <div className="mb-3 text-4xl">⏳</div>
-          <h1 className="mb-2 text-xl font-bold text-[#1e3a5f]">Kan ikke gi vurdering ennå</h1>
+          <Clock className="mx-auto mb-3 h-10 w-10 text-gray-400" />
+          <h1 className="mb-2 text-xl font-bold text-brand-700">Kan ikke gi vurdering ennå</h1>
           <p className="text-gray-600">Du kan gi vurdering først etter at oppdraget er akseptert.</p>
         </div>
       </div>
@@ -81,8 +82,8 @@ export default async function RatePage({ params }: Props) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg text-center">
-          <div className="mb-3 text-4xl">⭐</div>
-          <h1 className="mb-2 text-xl font-bold text-[#1e3a5f]">Allerede vurdert</h1>
+          <Star className="mx-auto mb-3 h-10 w-10 fill-yellow-400 text-yellow-400" />
+          <h1 className="mb-2 text-xl font-bold text-brand-700">Allerede vurdert</h1>
           <p className="text-gray-600">
             Du har allerede gitt {companyName}{" "}
             <span className="font-semibold">{ratingData.score} av 5</span> stjerner.
@@ -111,7 +112,7 @@ export default async function RatePage({ params }: Props) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
-        <h1 className="mb-1 text-center text-xl font-bold text-[#1e3a5f]">
+        <h1 className="mb-1 text-center text-xl font-bold text-brand-700">
           Gi vurdering
         </h1>
         <p className="mb-6 text-center text-gray-600">

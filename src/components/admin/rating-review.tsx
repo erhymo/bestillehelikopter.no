@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { StarRating } from "@/components/ui/star-rating";
 
 interface RatingRow {
   id: string;
@@ -55,8 +56,6 @@ export function RatingReview() {
     setUpdating(null);
   };
 
-  const stars = (n: number) => "⭐".repeat(n) + "☆".repeat(5 - n);
-
   return (
     <div>
       <div className="mb-4 flex items-center gap-3">
@@ -84,7 +83,7 @@ export function RatingReview() {
             <div key={r.id} className="rounded-lg border border-gray-200 bg-white p-4">
               <div className="mb-2 flex items-center justify-between">
                 <div>
-                  <span className="text-sm">{stars(r.score)}</span>
+                  <StarRating score={r.score} />
                   <span className="ml-2 text-xs text-gray-600">
                     Selskap: {r.companyId.slice(0, 8)}… | Jobb: {r.jobId.slice(0, 8)}…
                   </span>

@@ -1,6 +1,7 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { notFound } from "next/navigation";
 import { trackServerPageView } from "@/lib/analytics-server";
+import { StarRating } from "@/components/ui/star-rating";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -45,12 +46,10 @@ export default async function CompanyPublicPage({ params }: Props) {
       <div className="w-full max-w-2xl">
         {/* Company header */}
         <div className="mb-8 rounded-lg bg-white p-8 shadow-lg text-center">
-          <h1 className="mb-2 text-2xl font-bold text-[#1e3a5f]">{name}</h1>
+          <h1 className="mb-2 text-2xl font-bold text-brand-700">{name}</h1>
           {ratingCount > 0 ? (
             <div className="flex items-center justify-center gap-2">
-              <span className="text-3xl font-bold text-yellow-500">
-                {"⭐".repeat(Math.round(avgRating))}
-              </span>
+              <StarRating score={avgRating} size={22} />
               <span className="text-lg font-semibold text-gray-700">
                 {avgRating.toFixed(1)}
               </span>
@@ -66,13 +65,11 @@ export default async function CompanyPublicPage({ params }: Props) {
         {/* Approved ratings */}
         {ratings.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-[#1e3a5f]">Vurderinger</h2>
+            <h2 className="text-lg font-semibold text-brand-700">Vurderinger</h2>
             {ratings.map((r) => (
               <div key={r.id} className="rounded-lg bg-white p-5 shadow-sm">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-lg">
-                    {"⭐".repeat(r.score)}{"☆".repeat(5 - r.score)}
-                  </span>
+                  <StarRating score={r.score} />
                   {r.createdAt && (
                     <span className="text-xs text-gray-600">
                       {new Date(r.createdAt).toLocaleDateString("nb-NO")}

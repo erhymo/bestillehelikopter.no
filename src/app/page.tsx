@@ -20,15 +20,15 @@ export default function Home() {
         <h2 className="mb-4 text-lg font-semibold text-gray-900">Slik fungerer det</h2>
         <ol className="space-y-3 text-sm text-gray-700">
           <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1e3a5f] text-xs font-bold text-white">1</span>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-700 text-xs font-bold text-white">1</span>
             <span><strong>Beskriv oppdraget</strong> — Marker hentested og leveringspunkt(er) i kartet. Legg til last og ønsket dato.</span>
           </li>
           <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1e3a5f] text-xs font-bold text-white">2</span>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-700 text-xs font-bold text-white">2</span>
             <span><strong>Motta tilbud</strong> — Et helikopterselskap vurderer forespørselen og sender deg et uforpliktende pristilbud på e-post.</span>
           </li>
           <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1e3a5f] text-xs font-bold text-white">3</span>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-700 text-xs font-bold text-white">3</span>
             <span><strong>Aksepter eller avslå</strong> — Gjennomgå tilbudet og aksepter direkte fra e-posten. Selskapet kontakter deg for å avtale detaljer.</span>
           </li>
         </ol>

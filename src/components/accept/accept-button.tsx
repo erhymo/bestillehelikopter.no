@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { useAnalytics } from "@/hooks/use-analytics";
 
 interface AcceptButtonProps {
@@ -44,7 +45,7 @@ export function AcceptButton({ token }: AcceptButtonProps) {
   if (accepted) {
     return (
       <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-        <div className="mb-3 text-4xl">✅</div>
+        <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-green-600" />
         <h2 className="mb-2 text-lg font-bold text-green-800">
           Tilbudet er akseptert!
         </h2>

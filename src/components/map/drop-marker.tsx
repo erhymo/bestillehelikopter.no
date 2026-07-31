@@ -26,7 +26,7 @@ export function DropMarker({
     color === "green"
       ? "bg-green-600"
       : color === "blue"
-        ? "bg-blue-600"
+        ? "bg-brand-700"
         : "bg-red-600";
 
   return (

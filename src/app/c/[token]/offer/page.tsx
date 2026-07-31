@@ -83,7 +83,7 @@ export default async function CompanyOfferPage({ params }: PageProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
-          <h1 className="mb-4 text-xl font-bold text-[#1e3a5f]">
+          <h1 className="mb-4 text-xl font-bold text-brand-700">
             Tilbud allerede sendt
           </h1>
           <div className="space-y-3 rounded-lg bg-gray-50 p-4 text-sm">
@@ -128,7 +128,7 @@ export default async function CompanyOfferPage({ params }: PageProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-xl font-bold text-[#1e3a5f]">Gi tilbud</h1>
+        <h1 className="mb-2 text-xl font-bold text-brand-700">Gi tilbud</h1>
         <p className="mb-6 text-sm text-gray-600">
           Fyll ut prisene og send tilbudet til kunden.
         </p>
