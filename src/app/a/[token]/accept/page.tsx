@@ -101,7 +101,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
           {isThisOffer && (
             <Link
               href={buildRatingUrl(token)}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-brand-700 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-600"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-600"
             >
               <Star className="h-4 w-4" /> Gi vurdering
             </Link>

@@ -68,7 +68,7 @@ export function RatingReview() {
           />
           Kun ventende
         </label>
-        <button onClick={fetchRatings} className="rounded-md bg-gray-200 px-3 py-1.5 text-sm hover:bg-gray-300">
+        <button onClick={fetchRatings} className="rounded-lg bg-gray-200 px-3 py-1.5 text-sm hover:bg-gray-300">
           Oppdater
         </button>
       </div>
@@ -104,7 +104,7 @@ export function RatingReview() {
                     <button
                       onClick={() => handleModerate(r.id, true)}
                       disabled={updating === r.id}
-                      className="rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                      className="rounded-lg bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
                     >
                       Godkjenn
                     </button>
@@ -113,7 +113,7 @@ export function RatingReview() {
                     <button
                       onClick={() => handleModerate(r.id, false)}
                       disabled={updating === r.id}
-                      className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                      className="rounded-lg bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
                     >
                       Avvis
                     </button>

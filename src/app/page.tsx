@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RfqForm } from "@/components/rfq/rfq-form";
+import { Logo } from "@/components/ui/logo";
 import { trackServerPageView } from "@/lib/analytics-server";
 
 export default function Home() {
@@ -7,8 +8,9 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <header className="mb-8">
+        <Logo className="mb-4" iconClassName="h-7 w-7" />
         <h1 className="text-3xl font-bold text-gray-900">
-          🚁 Få tilbud på helikoptertransport
+          Få tilbud på helikoptertransport
         </h1>
         <p className="mt-1 text-gray-600">
           Beskriv oppdraget ditt — vi finner riktig selskap for jobben.

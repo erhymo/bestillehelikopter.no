@@ -181,7 +181,7 @@ export function OfferForm({
           type="file"
           accept="application/pdf"
           onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
-          className="w-full rounded-lg border px-4 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-brand-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
+          className="w-full rounded-lg border px-4 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-brand-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white"
         />
         {attachment && (
           <p className="mt-1 text-xs text-gray-600">

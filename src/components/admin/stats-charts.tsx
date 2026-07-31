@@ -3,6 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { BarChart3, TrendingUp } from "lucide-react";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { MiniBarChart, MiniLineChart } from "@/components/admin/mini-chart";
+
+const MONTH_SHORT = ["jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"];
+
+/** "2026-03" -> "mar" */
+function formatMonthShort(month: string): string {
+  const idx = parseInt(month.split("-")[1] ?? "", 10) - 1;
+  return MONTH_SHORT[idx] ?? month;
+}
 
 interface MonthRow {
   month: string;
@@ -97,6 +106,17 @@ export function StatsCharts() {
       {/* Monthly table */}
       <div>
         <h3 className="mb-2 text-sm font-semibold text-gray-700">Per måned (siste 12 mnd)</h3>
+        {monthly.length > 0 && (
+          <div className="mb-3 rounded-lg border border-gray-200 bg-white p-4">
+            <MiniBarChart
+              labels={monthly.map((m) => formatMonthShort(m.month))}
+              series={[
+                { name: "Forespørsler", color: "#2a4f7f", data: monthly.map((m) => m.rfq) },
+                { name: "Fullført", color: "#8cb4d9", data: monthly.map((m) => m.completed) },
+              ]}
+            />
+          </div>
+        )}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
@@ -185,6 +205,12 @@ export function StatsCharts() {
           <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
             <TrendingUp className="h-4 w-4" /> Sidevisninger per måned
           </h3>
+          <div className="mb-3 rounded-lg border border-gray-200 bg-white p-4">
+            <MiniLineChart
+              labels={analyticsMonthly.map((m) => formatMonthShort(m.month))}
+              data={analyticsMonthly.map((m) => m.uniqueSessions)}
+            />
+          </div>
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50">

@@ -74,7 +74,7 @@ export function JobTable() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
         >
           <option value="">Alle</option>
           <option value="open">Åpen</option>
@@ -83,7 +83,7 @@ export function JobTable() {
           <option value="closed">Lukket</option>
           <option value="deleted">Slettet</option>
         </select>
-        <button onClick={fetchJobs} className="ml-2 rounded-md bg-gray-200 px-3 py-1.5 text-sm hover:bg-gray-300">
+        <button onClick={fetchJobs} className="ml-2 rounded-lg bg-gray-200 px-3 py-1.5 text-sm hover:bg-gray-300">
           Oppdater
         </button>
       </div>

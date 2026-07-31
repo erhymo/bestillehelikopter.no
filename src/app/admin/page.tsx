@@ -106,26 +106,26 @@ export default function AdminPage() {
             placeholder="Til (e-postadresse)"
             value={emailForm.to}
             onChange={(e) => setEmailForm({ ...emailForm, to: e.target.value })}
-            className="rounded-md border px-3 py-2 text-sm"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
           <input
             placeholder="Emne"
             value={emailForm.subject}
             onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
-            className="rounded-md border px-3 py-2 text-sm"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
           <textarea
             placeholder="Melding"
             rows={4}
             value={emailForm.text}
             onChange={(e) => setEmailForm({ ...emailForm, text: e.target.value })}
-            className="rounded-md border px-3 py-2 text-sm"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
           <div className="flex items-center gap-3">
             <button
               onClick={handleSendEmail}
               disabled={emailSending || !emailForm.to || !emailForm.subject || !emailForm.text}
-              className="rounded-md bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
             >
               {emailSending ? "Sender..." : "Send e-post"}
             </button>

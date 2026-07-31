@@ -151,7 +151,7 @@ export function MapView({ data }: { data: MapViewData }) {
             <button
               key={id}
               onClick={() => setMapType(id)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 mapType === id
                   ? "bg-brand-700 text-white"
                   : "text-gray-700 hover:bg-gray-100"

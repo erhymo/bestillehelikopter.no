@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { HelicopterIcon } from "@/components/ui/logo";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -45,7 +46,7 @@ export default function AdminLayout({
           <p className="mb-6 text-sm text-gray-600">Logg inn for å fortsette</p>
           <button
             onClick={signIn}
-            className="w-full rounded-md bg-brand-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
+            className="w-full rounded-lg bg-brand-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
           >
             Logg inn med Google
           </button>
@@ -65,7 +66,7 @@ export default function AdminLayout({
           </p>
           <button
             onClick={signOut}
-            className="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+            className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
           >
             Logg ut
           </button>
@@ -80,7 +81,9 @@ export default function AdminLayout({
       {/* Sidebar */}
       <aside className="w-56 shrink-0 border-r border-gray-200 bg-white">
         <div className="border-b border-gray-200 px-4 py-4">
-          <h1 className="text-lg font-bold text-brand-700">🚁 Admin</h1>
+          <h1 className="flex items-center gap-2 text-lg font-bold text-brand-700">
+            <HelicopterIcon className="h-5 w-5" /> Admin
+          </h1>
         </div>
         <nav className="flex flex-col gap-1 p-2">
           {NAV_ITEMS.map((item) => {
@@ -90,7 +93,7 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   active
                     ? "bg-brand-700 text-white"
                     : "text-gray-700 hover:bg-gray-100"
@@ -106,7 +109,7 @@ export default function AdminLayout({
           <p className="mb-1 truncate text-xs text-gray-600">{user.email}</p>
           <button
             onClick={signOut}
-            className="w-full rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
+            className="w-full rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
           >
             Logg ut
           </button>

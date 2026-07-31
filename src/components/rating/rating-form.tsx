@@ -114,7 +114,7 @@ export default function RatingForm({ token, companyName }: RatingFormProps) {
           maxLength={1000}
           rows={3}
           placeholder="Fortell om din opplevelse..."
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-700 focus:ring-1 focus:ring-brand-700 focus:outline-none"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-700 focus:ring-1 focus:ring-brand-700 focus:outline-none"
         />
         <p className="mt-1 text-xs text-gray-600">{comment.length}/1000</p>
       </div>
@@ -126,7 +126,7 @@ export default function RatingForm({ token, companyName }: RatingFormProps) {
       <button
         type="submit"
         disabled={submitting || score === 0}
-        className="w-full rounded-md bg-brand-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-lg bg-brand-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? "Sender..." : "Send vurdering"}
       </button>

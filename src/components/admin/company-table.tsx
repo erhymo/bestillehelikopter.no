@@ -99,11 +99,11 @@ export function CompanyTable() {
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => { setEditId(null); setForm(EMPTY_FORM); setShowForm(true); }}
-          className="rounded-md bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
+          className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
         >
           + Legg til selskap
         </button>
-        <button onClick={fetchCompanies} className="rounded-md bg-gray-200 px-3 py-2 text-sm hover:bg-gray-300">
+        <button onClick={fetchCompanies} className="rounded-lg bg-gray-200 px-3 py-2 text-sm hover:bg-gray-300">
           Oppdater
         </button>
       </div>
@@ -114,22 +114,22 @@ export function CompanyTable() {
           <h3 className="mb-3 text-sm font-semibold">{editId ? "Rediger selskap" : "Nytt selskap"}</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <input placeholder="Navn" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="rounded-md border px-3 py-2 text-sm" />
+              className="rounded-lg border px-3 py-2 text-sm" />
             <input placeholder="E-post" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="rounded-md border px-3 py-2 text-sm" />
+              className="rounded-lg border px-3 py-2 text-sm" />
             <input placeholder="Telefon" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="rounded-md border px-3 py-2 text-sm" />
+              className="rounded-lg border px-3 py-2 text-sm" />
             <input placeholder="Regioner (komma-separert)" value={form.region}
               onChange={(e) => setForm({ ...form, region: e.target.value })}
-              className="rounded-md border px-3 py-2 text-sm" />
+              className="rounded-lg border px-3 py-2 text-sm" />
           </div>
           <div className="mt-3 flex gap-2">
             <button onClick={handleSave} disabled={saving || !form.name || !form.email}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
+              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
               {saving ? "Lagrer..." : "Lagre"}
             </button>
             <button onClick={() => { setShowForm(false); setEditId(null); }}
-              className="rounded-md bg-gray-200 px-4 py-2 text-sm hover:bg-gray-300">Avbryt</button>
+              className="rounded-lg bg-gray-200 px-4 py-2 text-sm hover:bg-gray-300">Avbryt</button>
           </div>
         </div>
       )}
