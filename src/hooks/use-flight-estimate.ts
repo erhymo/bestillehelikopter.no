@@ -2,16 +2,20 @@
 
 import { useMemo } from "react";
 import { estimateAll } from "@/lib/flight";
-import type { GeoPoint, Drop, FlightEstimate } from "@/types";
+import type { GeoPoint, Drop, FlightEstimate, TransportType } from "@/types";
 
 // Hook som beregner flytidsestimat live mens brukeren legger til drops
 
-export function useFlightEstimate(pickup: GeoPoint | null, drops: Drop[]) {
+export function useFlightEstimate(
+  pickup: GeoPoint | null,
+  drops: Drop[],
+  transportType: TransportType = "sling",
+) {
   return useMemo(() => {
     if (!pickup || drops.length === 0) {
       return { estimates: [] as FlightEstimate[], totalFlightTimeMin: 0 };
     }
-    return estimateAll(pickup, drops);
-  }, [pickup, drops]);
+    return estimateAll(pickup, drops, transportType);
+  }, [pickup, drops, transportType]);
 }
 

@@ -58,6 +58,7 @@ export default async function CompanyMapPage({ params }: PageProps) {
     totalFlightTimeMin: jobData.totalFlightTimeMin ?? 0,
     desiredDate: jobData.desiredDate ?? "",
     flexibleDate: jobData.flexibleDate ?? false,
+    transportType: jobData.transportType ?? "sling",
     nettbruk: jobData.nettbruk ?? false,
     over15m: jobData.over15m ?? false,
   };

@@ -4,17 +4,19 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { LoadItem } from "@/types";
+import type { LoadItem, TransportType } from "@/types";
 
 interface DropData {
   lat: number;
   lng: number;
   hpieces: number;
   loadItems: LoadItem[];
+  passengers: number;
 }
 
 interface DropsStepProps {
   drops: DropData[];
+  transportType: TransportType;
   activeDropIndex?: number | null;
   onActivateDrop: (index: number) => void;
   onUpdateDrop: (index: number, drop: DropData) => void;
@@ -25,6 +27,7 @@ const LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 export function DropsStep({
   drops,
+  transportType,
   activeDropIndex = null,
   onActivateDrop,
   onUpdateDrop,
@@ -103,38 +106,58 @@ export function DropsStep({
             </button>
           </div>
 
-          <div className="mt-2 flex items-center gap-3 pl-9">
-            <label className="flex items-center gap-1.5 text-xs text-gray-600">
-              Antall hiv
-              <input
-                type="number"
-                min={1}
-                value={drop.hpieces}
-                onChange={(e) =>
-                  onUpdateDrop(di, {
-                    ...drop,
-                    hpieces: parseInt(e.target.value) || 1,
-                  })
-                }
-                className="w-14 rounded border border-gray-300 px-1.5 py-0.5 text-xs"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => toggleExpanded(di)}
-              className="inline-flex items-center gap-0.5 text-xs text-gray-500 hover:text-gray-700"
-            >
-              {expanded.has(di) ? (
-                <ChevronDown className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronRight className="h-3.5 w-3.5" />
-              )}
-              Last
-              {drop.loadItems.length > 0 ? ` (${drop.loadItems.length})` : ""}
-            </button>
-          </div>
+          {transportType === "passenger" ? (
+            <div className="mt-2 flex items-center gap-3 pl-9">
+              <label className="flex items-center gap-1.5 text-xs text-gray-600">
+                Antall personer
+                <input
+                  type="number"
+                  min={1}
+                  value={drop.passengers}
+                  onChange={(e) =>
+                    onUpdateDrop(di, {
+                      ...drop,
+                      passengers: parseInt(e.target.value) || 1,
+                    })
+                  }
+                  className="w-14 rounded border border-gray-300 px-1.5 py-0.5 text-xs"
+                />
+              </label>
+            </div>
+          ) : (
+            <div className="mt-2 flex items-center gap-3 pl-9">
+              <label className="flex items-center gap-1.5 text-xs text-gray-600">
+                Antall hiv
+                <input
+                  type="number"
+                  min={1}
+                  value={drop.hpieces}
+                  onChange={(e) =>
+                    onUpdateDrop(di, {
+                      ...drop,
+                      hpieces: parseInt(e.target.value) || 1,
+                    })
+                  }
+                  className="w-14 rounded border border-gray-300 px-1.5 py-0.5 text-xs"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => toggleExpanded(di)}
+                className="inline-flex items-center gap-0.5 text-xs text-gray-500 hover:text-gray-700"
+              >
+                {expanded.has(di) ? (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronRight className="h-3.5 w-3.5" />
+                )}
+                Last
+                {drop.loadItems.length > 0 ? ` (${drop.loadItems.length})` : ""}
+              </button>
+            </div>
+          )}
 
-          {expanded.has(di) && (
+          {transportType === "sling" && expanded.has(di) && (
             <div className="mt-2 space-y-2 border-t border-gray-100 pt-2 pl-9">
               {drop.loadItems.map((item, li) => (
                 <div key={li} className="flex items-end gap-2">

@@ -2,9 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   computeFlightTime,
   computeFlightTimeBetweenPoints,
+  computeCruiseFlightTime,
   haversineMeters,
   getWeightSpeedCapKnots,
   TURNAROUND_MIN_PER_HIV,
+  CRUISE_SPEED_KN,
 } from "./flightTime";
 
 // ── Constants for assertions ──────────────────────────────────
@@ -158,6 +160,28 @@ describe("TURNAROUND_MIN_PER_HIV", () => {
   it("is a small positive number of minutes", () => {
     expect(TURNAROUND_MIN_PER_HIV).toBeGreaterThan(0);
     expect(TURNAROUND_MIN_PER_HIV).toBeLessThan(10);
+  });
+});
+
+describe("computeCruiseFlightTime", () => {
+  it("returns zero time for zero distance", () => {
+    const result = computeCruiseFlightTime(0);
+    expect(result.timeSeconds).toBe(0);
+    expect(result.speedKnots).toBe(CRUISE_SPEED_KN);
+  });
+
+  it("uses a fixed cruise speed regardless of distance", () => {
+    const near = computeCruiseFlightTime(10_000);
+    const far = computeCruiseFlightTime(100_000);
+    expect(near.speedKnots).toBe(CRUISE_SPEED_KN);
+    expect(far.speedKnots).toBe(CRUISE_SPEED_KN);
+  });
+
+  it("computes time from distance at cruise speed", () => {
+    const distanceKm = 50;
+    const expectedHours = distanceKm / (CRUISE_SPEED_KN * KN_TO_KMH);
+    const result = computeCruiseFlightTime(distanceKm * 1000);
+    expect(result.timeSeconds).toBeCloseTo(expectedHours * 3600, 5);
   });
 });
 

@@ -59,6 +59,13 @@ export function getWeightSpeedCapKnots(weightKg: number): number {
  */
 export const TURNAROUND_MIN_PER_HIV = 2;
 
+// ── Passenger transport (cabin, no sling load) ───────────────
+// A load hanging outside the aircraft forces slow, terrain-cautious flying
+// (see computeWorkSpeedKnots above). Passengers riding inside the cabin
+// don't — the aircraft flies at normal cruise speed regardless of terrain,
+// same reasoning Vortix uses for its CAT ("taxi") mode.
+export const CRUISE_SPEED_KN = 110;
+
 // ── Result type ───────────────────────────────────────────────
 
 export interface FlightTimeResult {
@@ -132,6 +139,21 @@ export function computeFlightTime(
   const timeSeconds = (distanceKm / speedKmh) * 3600;
 
   return { slopeDegrees, speedKnots, timeSeconds };
+}
+
+/**
+ * Flight time for passenger transport: fixed cruise speed, no gradient or
+ * load-weight slowdown — the aircraft doesn't need to fly cautiously slow
+ * just because terrain is steep when there's no external sling load.
+ */
+export function computeCruiseFlightTime(horizontalDistanceM: number): FlightTimeResult {
+  if (horizontalDistanceM <= 0) {
+    return { slopeDegrees: 0, speedKnots: CRUISE_SPEED_KN, timeSeconds: 0 };
+  }
+  const speedKmh = CRUISE_SPEED_KN * KN_TO_KMH;
+  const distanceKm = horizontalDistanceM / 1000;
+  const timeSeconds = (distanceKm / speedKmh) * 3600;
+  return { slopeDegrees: 0, speedKnots: CRUISE_SPEED_KN, timeSeconds };
 }
 
 // ── Convenience: from lat/lng points ──────────────────────────

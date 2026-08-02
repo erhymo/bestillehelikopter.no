@@ -22,9 +22,11 @@ const DropInputSchema = z.object({
   lng: z.number().min(-180).max(180),
   hpieces: z.number().int().min(1).default(1),
   loadItems: z.array(LoadItemSchema).default([]),
+  passengers: z.number().int().min(1).max(30).default(1),
 });
 
 const RfqPayloadSchema = z.object({
+  transportType: z.enum(["sling", "passenger"]).default("sling"),
   customer: z.object({
     name: z.string().trim().min(1, "Navn er påkrevd"),
     company: z.string().trim().optional(),
@@ -100,6 +102,7 @@ export async function POST(req: NextRequest) {
     }
 
     const {
+      transportType,
       customer,
       pickup,
       drops,
@@ -177,12 +180,14 @@ export async function POST(req: NextRequest) {
       elevation: elevations[i + 1].elevation,
       hpieces: d.hpieces,
       loadItems: d.loadItems,
+      passengers: d.passengers,
     }));
 
     // 4. Compute flight estimates
     const { estimates, totalFlightTimeMin } = estimateAll(
       pickupWithElev,
       dropsWithElev,
+      transportType,
     );
 
     // 5. Create Job document
@@ -205,6 +210,7 @@ export async function POST(req: NextRequest) {
       },
       pickup: pickupWithElev,
       drops: dropsWithElev,
+      transportType,
       nettbruk,
       over15m,
       desiredDate,

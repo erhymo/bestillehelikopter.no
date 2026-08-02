@@ -1,10 +1,11 @@
 "use client";
 
-import type { FlightEstimate } from "@/types";
+import type { FlightEstimate, TransportType } from "@/types";
 
 interface FlightSummaryProps {
   estimates: FlightEstimate[];
   totalFlightTimeMin: number;
+  transportType?: TransportType;
 }
 
 const LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -12,7 +13,9 @@ const LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 export function FlightSummary({
   estimates,
   totalFlightTimeMin,
+  transportType = "sling",
 }: FlightSummaryProps) {
+  const isPassenger = transportType === "passenger";
   if (estimates.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-gray-300 p-4 text-center text-sm text-gray-600">
@@ -41,7 +44,7 @@ export function FlightSummary({
                 Høydeforskjell
               </th>
               <th className="px-3 py-2 text-right font-medium text-gray-600">
-                Hiv
+                {isPassenger ? "Personer" : "Hiv"}
               </th>
               <th className="px-3 py-2 text-right font-medium text-gray-600">
                 Flytid
@@ -61,7 +64,7 @@ export function FlightSummary({
                   {est.elevGainM} m
                 </td>
                 <td className="px-3 py-2 text-right text-gray-600">
-                  {est.hiveCount}×
+                  {isPassenger ? (est.passengers ?? 1) : `${est.hiveCount}×`}
                 </td>
                 <td className="px-3 py-2 text-right font-medium">
                   {est.flightTimeMin} min

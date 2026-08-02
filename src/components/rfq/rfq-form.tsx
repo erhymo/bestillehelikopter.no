@@ -5,6 +5,7 @@ import { CheckCircle2, TriangleAlert } from "lucide-react";
 import { MapPicker, type MapMode } from "@/components/map/map-picker";
 import { MapToolbar } from "@/components/rfq/map-toolbar";
 import { PickupStep } from "@/components/rfq/pickup-step";
+import { TransportTypeToggle } from "@/components/rfq/transport-type-toggle";
 import { DropsStep } from "@/components/rfq/drops-step";
 import { CustomerInfoStep } from "@/components/rfq/customer-info-step";
 import { FlightSummary } from "@/components/rfq/flight-summary";
@@ -17,7 +18,7 @@ import { usePhoneAuth } from "@/hooks/use-phone-auth";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { useFlightEstimate } from "@/hooks/use-flight-estimate";
 import { useLiveElevations } from "@/hooks/use-live-elevations";
-import type { GeoPoint, Drop, LoadItem } from "@/types";
+import type { GeoPoint, Drop, LoadItem, TransportType } from "@/types";
 import { formatCoordinate, parseCoordinateInput } from "@/lib/coordinates";
 import { validateEmail } from "@/lib/disposableEmail";
 import { reverseGeocodeRegion } from "@/lib/geocodeRegion";
@@ -37,6 +38,7 @@ interface DropData {
   lng: number;
   hpieces: number;
   loadItems: LoadItem[];
+  passengers: number;
 }
 
 const emptyCustomer: CustomerData = {
@@ -51,6 +53,7 @@ const emptyCustomer: CustomerData = {
 export function RfqForm() {
   // ── State ──
   const [mapMode, setMapMode] = useState<MapMode>("pickup");
+  const [transportType, setTransportType] = useState<TransportType>("sling");
   const [pickup, setPickup] = useState<{ lat: number; lng: number } | null>(null);
   const [drops, setDrops] = useState<DropData[]>([]);
   const [activeDropIndex, setActiveDropIndex] = useState<number | null>(null);
@@ -100,9 +103,10 @@ export function RfqForm() {
     elevation: liveElevations[pickup ? i + 1 : i] ?? 0,
     hpieces: d.hpieces,
     loadItems: d.loadItems,
+    passengers: d.passengers,
   }));
 
-  const { estimates, totalFlightTimeMin } = useFlightEstimate(pickupGeo, dropsGeo);
+  const { estimates, totalFlightTimeMin } = useFlightEstimate(pickupGeo, dropsGeo, transportType);
 
   // Suggest companies covering the pickup area (best-effort, never blocking).
   useEffect(() => {
@@ -134,7 +138,10 @@ export function RfqForm() {
     (point: { lat: number; lng: number }) => {
       setDrops((prev) => {
         setActiveDropIndex(prev.length);
-        return [...prev, { lat: point.lat, lng: point.lng, hpieces: 1, loadItems: [] }];
+        return [
+          ...prev,
+          { lat: point.lat, lng: point.lng, hpieces: 1, loadItems: [], passengers: 1 },
+        ];
       });
       trackFunnel("drops_added");
     },
@@ -195,6 +202,7 @@ export function RfqForm() {
       return;
     }
     setMapMode("pickup");
+    setTransportType("sling");
     setPickup(null);
     setDrops([]);
     setActiveDropIndex(null);
@@ -322,7 +330,9 @@ export function RfqForm() {
           lng: d.lng,
           hpieces: d.hpieces,
           loadItems: d.loadItems,
+          passengers: d.passengers,
         })),
+        transportType,
         nettbruk,
         over15m,
         desiredDate,
@@ -443,6 +453,8 @@ export function RfqForm() {
 
       {/* Form panel (right / bottom) */}
       <div className="flex-1 space-y-8 pb-12 lg:max-w-xl">
+        <TransportTypeToggle value={transportType} onChange={setTransportType} />
+
         <PickupStep
           pickup={pickup}
           isActive={mapMode === "pickup"}
@@ -451,17 +463,23 @@ export function RfqForm() {
 
         <DropsStep
           drops={drops}
+          transportType={transportType}
           activeDropIndex={activeDropIndex}
           onActivateDrop={activateDrop}
           onUpdateDrop={handleDropUpdate}
           onDeleteDrop={handleDropDelete}
         />
 
-        <FlightSummary estimates={estimates} totalFlightTimeMin={totalFlightTimeMin} />
+        <FlightSummary
+          estimates={estimates}
+          totalFlightTimeMin={totalFlightTimeMin}
+          transportType={transportType}
+        />
 
         <CustomerInfoStep
           data={customer}
           onChange={setCustomer}
+          transportType={transportType}
           nettbruk={nettbruk}
           onNettbrukChange={setNettbruk}
           over15m={over15m}

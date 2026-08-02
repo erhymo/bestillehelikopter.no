@@ -16,6 +16,7 @@ interface GeoPointData {
 interface DropData extends GeoPointData {
   hpieces: number;
   loadItems: { count: number; weightKg: number; type: string }[];
+  passengers?: number;
 }
 
 interface EstimateData {
@@ -23,6 +24,7 @@ interface EstimateData {
   distanceKm: number;
   elevGainM: number;
   flightTimeMin: number;
+  passengers?: number;
 }
 
 export interface MapViewData {
@@ -34,6 +36,7 @@ export interface MapViewData {
   totalFlightTimeMin: number;
   desiredDate: string;
   flexibleDate: boolean;
+  transportType: "sling" | "passenger";
   nettbruk: boolean;
   over15m: boolean;
 }
@@ -100,6 +103,8 @@ export function MapView({ data }: { data: MapViewData }) {
   const dateStr = data.desiredDate
     ? data.desiredDate + (data.flexibleDate ? " (fleksibel)" : "")
     : "Ikke spesifisert";
+
+  const isPassenger = data.transportType === "passenger";
 
   const extras: string[] = [];
   if (data.nettbruk) extras.push("Nettbruk");
@@ -172,6 +177,12 @@ export function MapView({ data }: { data: MapViewData }) {
         {/* Metadata */}
         <div className="mb-6 space-y-2 text-sm">
           <div className="flex justify-between">
+            <span className="text-gray-600">Type transport</span>
+            <span className="font-medium">
+              {isPassenger ? "Persontransport" : "Underhengende last"}
+            </span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-gray-600">Ønsket dato</span>
             <span className="font-medium">{dateStr}</span>
           </div>
@@ -221,19 +232,27 @@ export function MapView({ data }: { data: MapViewData }) {
                   {drop.lat.toFixed(5)}, {drop.lng.toFixed(5)}
                   {drop.elevation > 0 && ` · ${Math.round(drop.elevation)} moh`}
                 </p>
-                {drop.loadItems.length > 0 && (
+                {isPassenger ? (
                   <div className="mt-1 text-xs text-gray-600">
-                    {drop.loadItems.map((li, j) => (
-                      <span key={j}>
-                        {li.count}× {li.type} ({li.weightKg} kg)
-                        {j < drop.loadItems.length - 1 && ", "}
-                      </span>
-                    ))}
+                    Personer: {drop.passengers ?? 1}
                   </div>
+                ) : (
+                  <>
+                    {drop.loadItems.length > 0 && (
+                      <div className="mt-1 text-xs text-gray-600">
+                        {drop.loadItems.map((li, j) => (
+                          <span key={j}>
+                            {li.count}× {li.type} ({li.weightKg} kg)
+                            {j < drop.loadItems.length - 1 && ", "}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-1 text-xs text-gray-600">
+                      Hiv: {drop.hpieces}
+                    </div>
+                  </>
                 )}
-                <div className="mt-1 text-xs text-gray-600">
-                  Hiv: {drop.hpieces}
-                </div>
                 {est && (
                   <div className="mt-2 flex gap-4 text-xs">
                     <span className="text-gray-600">

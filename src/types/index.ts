@@ -44,6 +44,11 @@ export interface GeoPoint {
   address?: string;
 }
 
+// ── Transport type (job-level) ───────────────────────
+// "sling"     = underhengende last (hiv), terreng-sensitiv arbeidsfart
+// "passenger" = persontransport i kabin, fast cruisefart
+export type TransportType = "sling" | "passenger";
+
 // ── Load item (per drop) ─────────────────────────────
 export interface LoadItem {
   count: number; // antall kolli / enheter
@@ -52,8 +57,9 @@ export interface LoadItem {
 }
 
 export interface Drop extends GeoPoint {
-  hpieces: number; // antall hiv (helikopter-løft)
-  loadItems: LoadItem[];
+  hpieces: number; // antall hiv (helikopter-løft) — kun relevant ved transportType "sling"
+  loadItems: LoadItem[]; // kun relevant ved transportType "sling"
+  passengers: number; // antall personer — kun relevant ved transportType "passenger"
 }
 
 // ── Flight estimate ─────────────────────────────────
@@ -63,8 +69,10 @@ export interface FlightEstimate {
   elevGainM: number;
   slopeDeg: number;
   speedKn: number;
-  /** Number of hiv (round trips) this drop requires. */
+  /** Number of hiv (round trips) this drop requires. Always 1 for passenger transport. */
   hiveCount: number;
+  /** Number of passengers on this leg. Only set for transportType "passenger". */
+  passengers?: number;
   flightTimeMin: number;
 }
 
@@ -87,6 +95,7 @@ export interface Job {
   customer: Customer;
   pickup: GeoPoint;
   drops: Drop[];
+  transportType: TransportType;
   nettbruk: boolean;
   over15m: boolean; // last over 15 meter lengde
   desiredDate: string; // ISO date string (YYYY-MM-DD) eller ""
@@ -265,6 +274,7 @@ export interface CreateRfqInput {
   };
   pickup: Omit<GeoPoint, "elevation">; // elevation fetched server-side
   drops: Array<Omit<Drop, "elevation">>; // elevation fetched server-side
+  transportType: TransportType;
   nettbruk: boolean;
   over15m: boolean;
   desiredDate: string;
