@@ -498,6 +498,7 @@ export function RfqForm() {
           selected={selectedCompanyIds}
           onChange={setSelectedCompanyIds}
           region={pickupRegion}
+          pickup={pickup}
         />
 
         <ImageUpload

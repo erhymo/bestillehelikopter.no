@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
-import { getStorage, type FirebaseStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDEMO-not-a-real-key-placeholder",
@@ -14,32 +14,15 @@ const firebaseConfig = {
 
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// Lazy-initialize auth/db/storage to avoid crashing at module evaluation
-// when no real API key is configured (e.g. local dev without Firebase credentials).
-let _auth: Auth | null = null;
-let _db: Firestore | null = null;
-let _storage: FirebaseStorage | null = null;
-
-export const auth: Auth = new Proxy({} as Auth, {
-  get(_target, prop, receiver) {
-    if (!_auth) _auth = getAuth(app);
-    return Reflect.get(_auth, prop, receiver);
-  },
-});
-
-export const db: Firestore = new Proxy({} as Firestore, {
-  get(_target, prop, receiver) {
-    if (!_db) _db = getFirestore(app);
-    return Reflect.get(_db, prop, receiver);
-  },
-});
-
-export const storage: FirebaseStorage = new Proxy({} as FirebaseStorage, {
-  get(_target, prop, receiver) {
-    if (!_storage) _storage = getStorage(app);
-    return Reflect.get(_storage, prop, receiver);
-  },
-});
+// Plain singletons — a lazy Proxy wrapper was used here before, but it wraps
+// a bare `{}` object whose prototype chain never becomes `Firestore`/`Auth`,
+// so SDK calls that type-check their first argument (e.g. Firestore's
+// `collection()`) rejected it at runtime. `getAuth`/`getFirestore`/
+// `getStorage` don't throw on a bad config — failures only surface on the
+// actual network call — so eager initialization is just as safe.
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 export default app;
 

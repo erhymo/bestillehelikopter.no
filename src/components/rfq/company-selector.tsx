@@ -1,45 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { MapPin } from "lucide-react";
 import { db } from "@/lib/firebase/client";
 import { Spinner } from "@/components/ui/spinner";
+import { sortCompaniesByDistance, type SortedCompany } from "@/lib/companyDistance";
 
-interface CompanyOption {
-  id: string;
-  name: string;
-  region: string[];
-}
+const NEAREST_SHOWN = 3;
 
 interface CompanySelectorProps {
   selected: string[];
   onChange: (ids: string[]) => void;
   /** Lowercase fylke name detected from the pickup point, if any. */
   region?: string | null;
+  /** Pickup coordinates, if set — enables real distance sorting for companies with a known base. */
+  pickup?: { lat: number; lng: number } | null;
 }
 
-export function CompanySelector({ selected, onChange, region }: CompanySelectorProps) {
-  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+export function CompanySelector({ selected, onChange, region, pickup = null }: CompanySelectorProps) {
+  const [companies, setCompanies] = useState<SortedCompany[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllNearest, setShowAllNearest] = useState(false);
+  const hasAutoSelected = useRef(false);
 
   useEffect(() => {
     async function load() {
       try {
         const snap = await getDocs(collection(db, "companies"));
-        const list: CompanyOption[] = [];
+        const list: { id: string; name: string; region: string[]; baseLocation: { lat: number; lng: number } | null }[] = [];
         snap.forEach((doc) => {
           const data = doc.data();
-          if (data.active !== false) {
+          // Companies default to enabled unless explicitly disabled by admin.
+          if (data.disabled !== true) {
             list.push({
               id: doc.id,
               name: data.name ?? doc.id,
               region: Array.isArray(data.region) ? data.region : [],
+              baseLocation: data.baseLocation ?? null,
             });
           }
         });
-        list.sort((a, b) => a.name.localeCompare(b.name, "no"));
-        setCompanies(list);
+        setCompanies(sortCompaniesByDistance(list, pickup));
       } catch {
         // Silently fail — companies can be empty in dev
         setCompanies([]);
@@ -48,7 +50,24 @@ export function CompanySelector({ selected, onChange, region }: CompanySelectorP
       }
     }
     load();
-  }, []);
+    // Only re-fetch when pickup changes (re-sorts against the already-loaded
+    // list would be nicer, but a full reload is simple and this list rarely
+    // changes mid-session).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickup?.lat, pickup?.lng]);
+
+  const withDistance = companies.filter((c) => c.distanceKm !== null);
+  const withoutDistance = companies.filter((c) => c.distanceKm === null);
+
+  // Suggest the nearest few as a starting point, once — never fight the
+  // customer's own choices after that, even if they clear the selection.
+  useEffect(() => {
+    if (hasAutoSelected.current) return;
+    if (selected.length > 0) return;
+    if (withDistance.length === 0) return;
+    hasAutoSelected.current = true;
+    onChange(withDistance.slice(0, NEAREST_SHOWN).map((c) => c.id));
+  }, [withDistance, selected.length, onChange]);
 
   const toggle = (id: string) => {
     if (selected.includes(id)) {
@@ -83,12 +102,16 @@ export function CompanySelector({ selected, onChange, region }: CompanySelectorP
   }
 
   const matching = region
-    ? companies.filter((c) => c.region.some((r) => r.toLowerCase() === region))
+    ? withoutDistance.filter((c) => c.region.some((r) => r.toLowerCase() === region))
     : [];
   const matchingIds = new Set(matching.map((c) => c.id));
-  const others = matching.length > 0 ? companies.filter((c) => !matchingIds.has(c.id)) : companies;
+  const otherFallback =
+    matching.length > 0 ? withoutDistance.filter((c) => !matchingIds.has(c.id)) : withoutDistance;
 
-  const renderCompany = (c: CompanyOption) => (
+  const nearestVisible = showAllNearest ? withDistance : withDistance.slice(0, NEAREST_SHOWN);
+  const nearestHidden = withDistance.length - nearestVisible.length;
+
+  const renderCompany = (c: SortedCompany) => (
     <label
       key={c.id}
       className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
@@ -103,7 +126,12 @@ export function CompanySelector({ selected, onChange, region }: CompanySelectorP
         onChange={() => toggle(c.id)}
         className="h-4 w-4 rounded border-gray-300 text-blue-600"
       />
-      <span className="font-medium">{c.name}</span>
+      <span className="flex-1">
+        <span className="block font-medium">{c.name}</span>
+        {c.distanceKm !== null && (
+          <span className="text-xs text-gray-500">{Math.round(c.distanceKm)} km fra hentested</span>
+        )}
+      </span>
     </label>
   );
 
@@ -124,17 +152,40 @@ export function CompanySelector({ selected, onChange, region }: CompanySelectorP
         </button>
       </div>
 
-      {matching.length > 0 ? (
+      {withDistance.length > 0 && (
         <>
           <p className="flex items-center gap-1 text-xs font-medium text-green-700">
+            <MapPin className="h-3.5 w-3.5" /> Nærmest hentestedet
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">{nearestVisible.map(renderCompany)}</div>
+          {nearestHidden > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAllNearest(true)}
+              className="text-xs text-blue-600 hover:text-blue-800"
+            >
+              + {nearestHidden} flere
+            </button>
+          )}
+        </>
+      )}
+
+      {matching.length > 0 && (
+        <>
+          <p className="flex items-center gap-1 pt-2 text-xs font-medium text-green-700">
             <MapPin className="h-3.5 w-3.5" /> Dekker sannsynligvis ditt område
           </p>
           <div className="grid gap-2 sm:grid-cols-2">{matching.map(renderCompany)}</div>
-          <p className="pt-2 text-xs font-medium text-gray-500">Andre selskaper</p>
-          <div className="grid gap-2 sm:grid-cols-2">{others.map(renderCompany)}</div>
         </>
-      ) : (
-        <div className="grid gap-2 sm:grid-cols-2">{others.map(renderCompany)}</div>
+      )}
+
+      {otherFallback.length > 0 && (
+        <>
+          <p className="pt-2 text-xs font-medium text-gray-500">
+            {withDistance.length > 0 || matching.length > 0 ? "Andre selskaper" : "Alle selskaper"}
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">{otherFallback.map(renderCompany)}</div>
+        </>
       )}
     </div>
   );

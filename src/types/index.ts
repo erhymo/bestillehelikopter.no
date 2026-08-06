@@ -140,6 +140,7 @@ export interface Company {
   email: string;
   phone: string;
   region: string[]; // e.g. ["nordland", "troms"]
+  baseLocation: { lat: number; lng: number } | null; // selskapets hjemmebase, brukes til avstandssortering
   disabled: boolean;
   avgRating: number; // denormalized
   ratingCount: number; // denormalized

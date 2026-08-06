@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { parseCoordinateInput, formatCoordinate } from "@/lib/coordinates";
 
 interface CompanyRow {
   id: string;
@@ -9,6 +10,7 @@ interface CompanyRow {
   email: string;
   phone: string;
   region: string[];
+  baseLocation: { lat: number; lng: number } | null;
   disabled: boolean;
   avgRating: number;
   ratingCount: number;
@@ -20,9 +22,10 @@ interface CompanyFormData {
   email: string;
   phone: string;
   region: string;
+  base: string;
 }
 
-const EMPTY_FORM: CompanyFormData = { name: "", email: "", phone: "", region: "" };
+const EMPTY_FORM: CompanyFormData = { name: "", email: "", phone: "", region: "", base: "" };
 
 export function CompanyTable() {
   const { idToken } = useAdminAuth();
@@ -33,6 +36,7 @@ export function CompanyTable() {
   const [form, setForm] = useState<CompanyFormData>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [baseError, setBaseError] = useState<string | null>(null);
 
   const fetchCompanies = useCallback(async () => {
     if (!idToken) return;
@@ -53,6 +57,18 @@ export function CompanyTable() {
 
   const handleSave = async () => {
     if (!idToken) return;
+    setBaseError(null);
+
+    let baseLocation: { lat: number; lng: number } | null = null;
+    if (form.base.trim()) {
+      const parsed = parseCoordinateInput(form.base);
+      if (!parsed) {
+        setBaseError("Skriv inn f.eks. 60.472024, 5.322054 eller lim inn en Google Maps-lenke.");
+        return;
+      }
+      baseLocation = parsed;
+    }
+
     setSaving(true);
     const regionArr = form.region
       .split(",")
@@ -63,13 +79,26 @@ export function CompanyTable() {
       await fetch("/api/admin/companies", {
         method: "PATCH",
         headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editId, name: form.name, email: form.email, phone: form.phone, region: regionArr }),
+        body: JSON.stringify({
+          id: editId,
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          region: regionArr,
+          baseLocation,
+        }),
       });
     } else {
       await fetch("/api/admin/companies", {
         method: "POST",
         headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, email: form.email, phone: form.phone, region: regionArr }),
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          region: regionArr,
+          baseLocation,
+        }),
       });
     }
     setShowForm(false);
@@ -93,7 +122,14 @@ export function CompanyTable() {
 
   const startEdit = (c: CompanyRow) => {
     setEditId(c.id);
-    setForm({ name: c.name, email: c.email, phone: c.phone, region: c.region.join(", ") });
+    setForm({
+      name: c.name,
+      email: c.email,
+      phone: c.phone,
+      region: c.region.join(", "),
+      base: c.baseLocation ? formatCoordinate(c.baseLocation) : "",
+    });
+    setBaseError(null);
     setShowForm(true);
   };
 
@@ -101,7 +137,7 @@ export function CompanyTable() {
     <div>
       <div className="mb-4 flex items-center gap-2">
         <button
-          onClick={() => { setEditId(null); setForm(EMPTY_FORM); setShowForm(true); }}
+          onClick={() => { setEditId(null); setForm(EMPTY_FORM); setBaseError(null); setShowForm(true); }}
           className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
         >
           + Legg til selskap
@@ -125,13 +161,19 @@ export function CompanyTable() {
             <input placeholder="Regioner (komma-separert)" value={form.region}
               onChange={(e) => setForm({ ...form, region: e.target.value })}
               className="rounded-lg border px-3 py-2 text-sm" />
+            <div>
+              <input placeholder="Base (koordinat, f.eks. 60.47, 5.32)" value={form.base}
+                onChange={(e) => { setForm({ ...form, base: e.target.value }); setBaseError(null); }}
+                className="w-full rounded-lg border px-3 py-2 text-sm" />
+              {baseError && <p className="mt-1 text-xs text-red-600">{baseError}</p>}
+            </div>
           </div>
           <div className="mt-3 flex gap-2">
             <button onClick={handleSave} disabled={saving || !form.name || !form.email}
               className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
               {saving ? "Lagrer..." : "Lagre"}
             </button>
-            <button onClick={() => { setShowForm(false); setEditId(null); }}
+            <button onClick={() => { setShowForm(false); setEditId(null); setBaseError(null); }}
               className="rounded-lg bg-gray-200 px-4 py-2 text-sm hover:bg-gray-300">Avbryt</button>
           </div>
         </div>
@@ -148,6 +190,7 @@ export function CompanyTable() {
                 <th className="px-3 py-2 text-left font-medium text-gray-600">E-post</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-600">Telefon</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-600">Regioner</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-600">Base</th>
                 <th className="px-3 py-2 text-right font-medium text-gray-600">Rating</th>
                 <th className="px-3 py-2 text-center font-medium text-gray-600">Status</th>
                 <th className="px-3 py-2 text-right font-medium text-gray-600">Handlinger</th>
@@ -160,6 +203,9 @@ export function CompanyTable() {
                   <td className="px-3 py-2">{c.email}</td>
                   <td className="px-3 py-2">{c.phone}</td>
                   <td className="px-3 py-2">{c.region.join(", ")}</td>
+                  <td className="px-3 py-2 text-gray-600">
+                    {c.baseLocation ? formatCoordinate(c.baseLocation) : "—"}
+                  </td>
                   <td className="px-3 py-2 text-right">
                     {c.avgRating > 0 ? `${c.avgRating} (${c.ratingCount})` : "—"}
                   </td>
