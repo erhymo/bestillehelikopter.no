@@ -4,6 +4,9 @@
  * Eksporterer alle funksjoner som Firebase Functions runtime plukker opp.
  */
 
+import * as admin from "firebase-admin";
+admin.initializeApp();
+
 export { onRfqCreate } from "./on-rfq-create";
 export { onOfferAccept } from "./on-offer-accept";
 export { onRatingCreate } from "./on-rating-create";
