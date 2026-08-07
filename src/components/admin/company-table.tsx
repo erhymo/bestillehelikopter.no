@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { X } from "lucide-react";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { parseCoordinateInput, formatCoordinate } from "@/lib/coordinates";
+import type { BaseLocation } from "@/types";
 
 interface CompanyRow {
   id: string;
@@ -10,11 +12,16 @@ interface CompanyRow {
   email: string;
   phone: string;
   region: string[];
-  baseLocation: { lat: number; lng: number } | null;
+  baseLocations: BaseLocation[];
   disabled: boolean;
   avgRating: number;
   ratingCount: number;
   createdAt: string;
+}
+
+interface BaseDraft {
+  label: string;
+  coord: string;
 }
 
 interface CompanyFormData {
@@ -22,10 +29,11 @@ interface CompanyFormData {
   email: string;
   phone: string;
   region: string;
-  base: string;
+  bases: BaseDraft[];
 }
 
-const EMPTY_FORM: CompanyFormData = { name: "", email: "", phone: "", region: "", base: "" };
+const EMPTY_BASE: BaseDraft = { label: "", coord: "" };
+const EMPTY_FORM: CompanyFormData = { name: "", email: "", phone: "", region: "", bases: [] };
 
 export function CompanyTable() {
   const { idToken } = useAdminAuth();
@@ -55,18 +63,28 @@ export function CompanyTable() {
     fetchCompanies();
   }, [fetchCompanies]);
 
+  const addBaseRow = () => setForm((f) => ({ ...f, bases: [...f.bases, { ...EMPTY_BASE }] }));
+  const removeBaseRow = (i: number) =>
+    setForm((f) => ({ ...f, bases: f.bases.filter((_, idx) => idx !== i) }));
+  const updateBaseRow = (i: number, field: keyof BaseDraft, value: string) =>
+    setForm((f) => ({
+      ...f,
+      bases: f.bases.map((b, idx) => (idx === i ? { ...b, [field]: value } : b)),
+    }));
+
   const handleSave = async () => {
     if (!idToken) return;
     setBaseError(null);
 
-    let baseLocation: { lat: number; lng: number } | null = null;
-    if (form.base.trim()) {
-      const parsed = parseCoordinateInput(form.base);
+    const baseLocations: BaseLocation[] = [];
+    for (const b of form.bases) {
+      if (!b.coord.trim()) continue;
+      const parsed = parseCoordinateInput(b.coord);
       if (!parsed) {
-        setBaseError("Skriv inn f.eks. 60.472024, 5.322054 eller lim inn en Google Maps-lenke.");
+        setBaseError(`Ugyldig koordinat for "${b.label || "base"}": skriv f.eks. 60.472024, 5.322054.`);
         return;
       }
-      baseLocation = parsed;
+      baseLocations.push({ ...parsed, ...(b.label.trim() ? { label: b.label.trim() } : {}) });
     }
 
     setSaving(true);
@@ -85,7 +103,7 @@ export function CompanyTable() {
           email: form.email,
           phone: form.phone,
           region: regionArr,
-          baseLocation,
+          baseLocations,
         }),
       });
     } else {
@@ -97,7 +115,7 @@ export function CompanyTable() {
           email: form.email,
           phone: form.phone,
           region: regionArr,
-          baseLocation,
+          baseLocations,
         }),
       });
     }
@@ -127,7 +145,7 @@ export function CompanyTable() {
       email: c.email,
       phone: c.phone,
       region: c.region.join(", "),
-      base: c.baseLocation ? formatCoordinate(c.baseLocation) : "",
+      bases: c.baseLocations.map((b) => ({ label: b.label ?? "", coord: formatCoordinate(b) })),
     });
     setBaseError(null);
     setShowForm(true);
@@ -161,13 +179,48 @@ export function CompanyTable() {
             <input placeholder="Regioner (komma-separert)" value={form.region}
               onChange={(e) => setForm({ ...form, region: e.target.value })}
               className="rounded-lg border px-3 py-2 text-sm" />
-            <div>
-              <input placeholder="Base (koordinat, f.eks. 60.47, 5.32)" value={form.base}
-                onChange={(e) => { setForm({ ...form, base: e.target.value }); setBaseError(null); }}
-                className="w-full rounded-lg border px-3 py-2 text-sm" />
-              {baseError && <p className="mt-1 text-xs text-red-600">{baseError}</p>}
-            </div>
           </div>
+
+          <div className="mt-3">
+            <p className="mb-1.5 text-xs font-medium text-gray-700">
+              Baser (avstand til hentested regnes fra nærmeste)
+            </p>
+            <div className="space-y-2">
+              {form.bases.map((b, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    placeholder="Stedsnavn (valgfritt), f.eks. Bergen"
+                    value={b.label}
+                    onChange={(e) => updateBaseRow(i, "label", e.target.value)}
+                    className="w-48 rounded-lg border px-3 py-2 text-sm"
+                  />
+                  <input
+                    placeholder="Koordinat, f.eks. 60.47, 5.32"
+                    value={b.coord}
+                    onChange={(e) => { updateBaseRow(i, "coord", e.target.value); setBaseError(null); }}
+                    className="flex-1 rounded-lg border px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeBaseRow(i)}
+                    className="text-red-500 hover:text-red-700"
+                    title="Fjern base"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            {baseError && <p className="mt-1 text-xs text-red-600">{baseError}</p>}
+            <button
+              type="button"
+              onClick={addBaseRow}
+              className="mt-2 text-xs text-blue-600 hover:text-blue-800"
+            >
+              + Legg til base
+            </button>
+          </div>
+
           <div className="mt-3 flex gap-2">
             <button onClick={handleSave} disabled={saving || !form.name || !form.email}
               className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
@@ -190,7 +243,7 @@ export function CompanyTable() {
                 <th className="px-3 py-2 text-left font-medium text-gray-600">E-post</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-600">Telefon</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-600">Regioner</th>
-                <th className="px-3 py-2 text-left font-medium text-gray-600">Base</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-600">Baser</th>
                 <th className="px-3 py-2 text-right font-medium text-gray-600">Rating</th>
                 <th className="px-3 py-2 text-center font-medium text-gray-600">Status</th>
                 <th className="px-3 py-2 text-right font-medium text-gray-600">Handlinger</th>
@@ -204,7 +257,11 @@ export function CompanyTable() {
                   <td className="px-3 py-2">{c.phone}</td>
                   <td className="px-3 py-2">{c.region.join(", ")}</td>
                   <td className="px-3 py-2 text-gray-600">
-                    {c.baseLocation ? formatCoordinate(c.baseLocation) : "—"}
+                    {c.baseLocations.length === 0
+                      ? "—"
+                      : c.baseLocations.length === 1
+                        ? (c.baseLocations[0]!.label ?? formatCoordinate(c.baseLocations[0]!))
+                        : `${c.baseLocations.length} baser`}
                   </td>
                   <td className="px-3 py-2 text-right">
                     {c.avgRating > 0 ? `${c.avgRating} (${c.ratingCount})` : "—"}
@@ -234,4 +291,3 @@ export function CompanyTable() {
     </div>
   );
 }
-

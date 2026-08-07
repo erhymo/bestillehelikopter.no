@@ -6,6 +6,7 @@ import { MapPin } from "lucide-react";
 import { db } from "@/lib/firebase/client";
 import { Spinner } from "@/components/ui/spinner";
 import { sortCompaniesByDistance, type SortedCompany } from "@/lib/companyDistance";
+import type { BaseLocation } from "@/types";
 
 const NEAREST_SHOWN = 3;
 
@@ -28,7 +29,7 @@ export function CompanySelector({ selected, onChange, region, pickup = null }: C
     async function load() {
       try {
         const snap = await getDocs(collection(db, "companies"));
-        const list: { id: string; name: string; region: string[]; baseLocation: { lat: number; lng: number } | null }[] = [];
+        const list: { id: string; name: string; region: string[]; baseLocations: BaseLocation[] }[] = [];
         snap.forEach((doc) => {
           const data = doc.data();
           // Companies default to enabled unless explicitly disabled by admin.
@@ -37,7 +38,7 @@ export function CompanySelector({ selected, onChange, region, pickup = null }: C
               id: doc.id,
               name: data.name ?? doc.id,
               region: Array.isArray(data.region) ? data.region : [],
-              baseLocation: data.baseLocation ?? null,
+              baseLocations: Array.isArray(data.baseLocations) ? data.baseLocations : [],
             });
           }
         });
@@ -129,7 +130,10 @@ export function CompanySelector({ selected, onChange, region, pickup = null }: C
       <span className="flex-1">
         <span className="block font-medium">{c.name}</span>
         {c.distanceKm !== null && (
-          <span className="text-xs text-gray-500">{Math.round(c.distanceKm)} km fra hentested</span>
+          <span className="text-xs text-gray-500">
+            {Math.round(c.distanceKm)} km fra hentested
+            {c.nearestBase?.label ? ` (${c.nearestBase.label})` : ""}
+          </span>
         )}
       </span>
     </label>

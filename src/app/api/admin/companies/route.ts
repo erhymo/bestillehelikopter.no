@@ -7,16 +7,22 @@ import { verifyAdminToken } from "@/lib/admin-auth";
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
 
-type BaseLocationInput = { lat: number; lng: number } | null | undefined;
+type BaseLocationInput = { lat: number; lng: number; label?: string };
 
-function isValidBaseLocation(loc: BaseLocationInput): loc is { lat: number; lng: number } {
+function isValidBaseLocation(loc: unknown): loc is BaseLocationInput {
+  if (typeof loc !== "object" || loc === null) return false;
+  const v = loc as Record<string, unknown>;
   return (
-    !!loc &&
-    typeof loc.lat === "number" &&
-    typeof loc.lng === "number" &&
-    Math.abs(loc.lat) <= 90 &&
-    Math.abs(loc.lng) <= 180
+    typeof v.lat === "number" &&
+    typeof v.lng === "number" &&
+    Math.abs(v.lat) <= 90 &&
+    Math.abs(v.lng) <= 180 &&
+    (v.label === undefined || typeof v.label === "string")
   );
+}
+
+function isValidBaseLocations(value: unknown): value is BaseLocationInput[] {
+  return Array.isArray(value) && value.every(isValidBaseLocation);
 }
 
 export async function GET(req: NextRequest) {
@@ -35,7 +41,7 @@ export async function GET(req: NextRequest) {
         email: d.email,
         phone: d.phone,
         region: d.region ?? [],
-        baseLocation: d.baseLocation ?? null,
+        baseLocations: Array.isArray(d.baseLocations) ? d.baseLocations : [],
         disabled: d.disabled ?? false,
         avgRating: d.avgRating ?? 0,
         ratingCount: d.ratingCount ?? 0,
@@ -57,12 +63,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, phone, region, baseLocation } = body as {
+    const { name, email, phone, region, baseLocations } = body as {
       name?: string;
       email?: string;
       phone?: string;
       region?: string[];
-      baseLocation?: BaseLocationInput;
+      baseLocations?: unknown;
     };
 
     if (!name || !email || !phone) {
@@ -72,7 +78,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (baseLocation !== undefined && baseLocation !== null && !isValidBaseLocation(baseLocation)) {
+    if (baseLocations !== undefined && !isValidBaseLocations(baseLocations)) {
       return NextResponse.json(
         { ok: false, error: "Ugyldig baseposisjon" },
         { status: 400 },
@@ -85,7 +91,7 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       region: region ?? [],
-      baseLocation: isValidBaseLocation(baseLocation) ? baseLocation : null,
+      baseLocations: isValidBaseLocations(baseLocations) ? baseLocations : [],
       disabled: false,
       avgRating: 0,
       ratingCount: 0,
@@ -113,7 +119,7 @@ export async function PATCH(req: NextRequest) {
       email?: string;
       phone?: string;
       region?: string[];
-      baseLocation?: BaseLocationInput;
+      baseLocations?: unknown;
       disabled?: boolean;
     };
 
@@ -121,7 +127,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "id er påkrevd" }, { status: 400 });
     }
 
-    if (updates.baseLocation !== undefined && updates.baseLocation !== null && !isValidBaseLocation(updates.baseLocation)) {
+    if (updates.baseLocations !== undefined && !isValidBaseLocations(updates.baseLocations)) {
       return NextResponse.json(
         { ok: false, error: "Ugyldig baseposisjon" },
         { status: 400 },
@@ -134,9 +140,7 @@ export async function PATCH(req: NextRequest) {
     if (updates.email !== undefined) allowed.email = updates.email;
     if (updates.phone !== undefined) allowed.phone = updates.phone;
     if (updates.region !== undefined) allowed.region = updates.region;
-    if (updates.baseLocation !== undefined) {
-      allowed.baseLocation = updates.baseLocation === null ? null : updates.baseLocation;
-    }
+    if (updates.baseLocations !== undefined) allowed.baseLocations = updates.baseLocations;
     if (updates.disabled !== undefined) allowed.disabled = updates.disabled;
 
     if (Object.keys(allowed).length === 0) {
@@ -150,4 +154,3 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Intern feil" }, { status: 500 });
   }
 }
-

@@ -132,6 +132,13 @@ export interface Offer {
   repliedAt: Timestamp | null;
 }
 
+// ── Company base location ────────────────────────────
+export interface BaseLocation {
+  lat: number;
+  lng: number;
+  label?: string; // e.g. "Bergen", "Kinsarvik"
+}
+
 // ── Company ─────────────────────────────────────────
 export interface Company {
   _v: number;
@@ -140,7 +147,7 @@ export interface Company {
   email: string;
   phone: string;
   region: string[]; // e.g. ["nordland", "troms"]
-  baseLocation: { lat: number; lng: number } | null; // selskapets hjemmebase, brukes til avstandssortering
+  baseLocations: BaseLocation[]; // selskapets baser, brukes til avstandssortering (nærmeste base vinner)
   disabled: boolean;
   avgRating: number; // denormalized
   ratingCount: number; // denormalized
