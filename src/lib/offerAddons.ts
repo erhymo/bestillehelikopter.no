@@ -22,6 +22,15 @@ export function calculateOfferTotal(price: number, addons: OfferAddon[]): number
   return price + addons.reduce((sum, a) => sum + a.price, 0);
 }
 
+/**
+ * Grunnpris (flykostnad) = timepris × estimert flytid. Selskapet fyller inn
+ * timepris; systemet gjør multiplikasjonen — ikke selskapet selv — slik at
+ * grunnprisen alltid stemmer med jobbens faktiske flytidsestimat.
+ */
+export function calculateFlightCost(hourlyRateNok: number, flightTimeMin: number): number {
+  return Math.round(hourlyRateNok * (flightTimeMin / 60));
+}
+
 // Vises til selskapet når de fyller ut tilbudet, og til kunden i e-post og
 // på aksept-siden — prisen skal aldri fremstå som en bindende fastpris,
 // siden vær og forhold på oppdragsdagen kan endre den.

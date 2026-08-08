@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { verifyOfferToken, buildAcceptUrl } from "@/lib/tokens";
 import { adminDb, adminStorage } from "@/lib/firebase/admin";
 import { OfferStatus } from "@/types";
-import { calculateOfferTotal, OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
+import { calculateOfferTotal, calculateFlightCost, OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 
@@ -18,9 +18,7 @@ const OfferAddonSchema = z.object({
 
 const OfferPayloadSchema = z.object({
   token: z.string().min(1),
-  price: z.number().positive("Totalpris må være positiv"),
-  hourlyRate: z.number().positive("Timepris må være positiv").optional(),
-  hivRate: z.number().positive("Hivpris må være positiv").optional(),
+  hourlyRate: z.number().positive("Timepris må være positiv"),
   addons: z.array(OfferAddonSchema).max(20).default([]),
   comment: z.string().max(2000).optional(),
 });
@@ -48,7 +46,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { token, price, hourlyRate, hivRate, addons, comment } = parsed.data;
+    const { token, hourlyRate, addons, comment } = parsed.data;
 
     // 2. Verify token
     const payload = verifyOfferToken(token);
@@ -61,10 +59,13 @@ export async function POST(req: NextRequest) {
 
     const { jobId, companyId, offerId } = payload;
 
-    // 3. Fetch offer doc — check status
+    // 3. Fetch offer + job doc (need job's flight-time estimate to compute price)
     const offerRef = adminDb.doc(`jobs/${jobId}/offers/${offerId}`);
-    const offerSnap = await offerRef.get();
-    if (!offerSnap.exists) {
+    const [offerSnap, jobSnap] = await Promise.all([
+      offerRef.get(),
+      adminDb.doc(`jobs/${jobId}`).get(),
+    ]);
+    if (!offerSnap.exists || !jobSnap.exists) {
       return NextResponse.json(
         { ok: false, error: "Tilbudet ble ikke funnet" },
         { status: 404 },
@@ -82,6 +83,12 @@ export async function POST(req: NextRequest) {
         { status: 409 },
       );
     }
+
+    const jobData = jobSnap.data()!;
+    // System — not the company — multiplies hourly rate by the job's
+    // estimated flight time, so the base price always matches the real
+    // estimate rather than a number the company typed in by hand.
+    const price = calculateFlightCost(hourlyRate, jobData.totalFlightTimeMin ?? 0);
 
     // 4. Handle optional PDF attachment
     let attachmentRef: string | null = null;
@@ -115,8 +122,7 @@ export async function POST(req: NextRequest) {
     const now = FieldValue.serverTimestamp();
     await offerRef.update({
       price,
-      hourlyRate: hourlyRate ?? null,
-      hivRate: hivRate ?? null,
+      hourlyRate,
       addons,
       comment: comment?.trim() || null,
       attachmentRef,
@@ -124,13 +130,8 @@ export async function POST(req: NextRequest) {
       repliedAt: now,
     });
 
-    // 6. Fetch job + company for email to customer
-    const [jobSnap, companySnap] = await Promise.all([
-      adminDb.doc(`jobs/${jobId}`).get(),
-      adminDb.doc(`companies/${companyId}`).get(),
-    ]);
-
-    const jobData = jobSnap.data();
+    // 6. Fetch company for email to customer
+    const companySnap = await adminDb.doc(`companies/${companyId}`).get();
     const companyData = companySnap.data();
 
     if (jobData?.customer?.email && companyData?.name) {
@@ -154,15 +155,11 @@ export async function POST(req: NextRequest) {
 <h2 style="color:#1e3a5f;margin-top:0">Nytt tilbud mottatt</h2>
 <p>Hei ${customerName},</p>
 <p><strong>${compName}</strong> har sendt deg et tilbud på <strong>${grandTotal.toLocaleString("nb-NO")} NOK</strong>.</p>
-${
-  addons.length > 0
-    ? `<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
-<tr><td style="padding:4px 0;color:#555">Grunnpris</td><td style="padding:4px 0;text-align:right;color:#555">${price.toLocaleString("nb-NO")} NOK</td></tr>
+<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
+<tr><td style="padding:4px 0;color:#555">Flytidskostnad (${hourlyRate.toLocaleString("nb-NO")} NOK/t)</td><td style="padding:4px 0;text-align:right;color:#555">${price.toLocaleString("nb-NO")} NOK</td></tr>
 ${addonRows}
 <tr><td style="padding:8px 0;border-top:1px solid #e5e5e5;font-weight:600">Totalt</td><td style="padding:8px 0;border-top:1px solid #e5e5e5;text-align:right;font-weight:600">${grandTotal.toLocaleString("nb-NO")} NOK</td></tr>
-</table>`
-    : ""
-}
+</table>
 ${comment ? `<p style="color:#555"><em>"${comment.trim()}"</em></p>` : ""}
 <p style="font-size:13px;color:#888">${OFFER_PRICE_DISCLAIMER}</p>
 <div style="margin:24px 0;text-align:center">
@@ -204,7 +201,7 @@ ${comment ? `<p style="color:#555"><em>"${comment.trim()}"</em></p>` : ""}
         jobId,
         companyId,
         offerId,
-        metadata: { price, hourlyRate: hourlyRate ?? 0, hivRate: hivRate ?? 0 },
+        metadata: { price, hourlyRate },
         createdAt: new Date().toISOString(),
       })
       .catch((err: unknown) =>
@@ -220,4 +217,3 @@ ${comment ? `<p style="color:#555"><em>"${comment.trim()}"</em></p>` : ""}
     );
   }
 }
-

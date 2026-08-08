@@ -4,7 +4,12 @@ import { useState, useRef } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { Modal } from "@/components/ui/modal";
-import { OFFER_ADDON_DEFINITIONS, OFFER_PRICE_DISCLAIMER, calculateOfferTotal } from "@/lib/offerAddons";
+import {
+  OFFER_ADDON_DEFINITIONS,
+  OFFER_PRICE_DISCLAIMER,
+  calculateOfferTotal,
+  calculateFlightCost,
+} from "@/lib/offerAddons";
 
 interface OfferFormProps {
   token: string;
@@ -37,9 +42,7 @@ export function OfferForm({
   totalFlightTimeMin,
   dropCount,
 }: OfferFormProps) {
-  const [price, setPrice] = useState("");
   const [hourlyRate, setHourlyRate] = useState("");
-  const [hivRate, setHivRate] = useState("");
   const [addonRows, setAddonRows] = useState<AddonRow[]>(makeDefaultAddonRows);
   const [comment, setComment] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -67,15 +70,16 @@ export function OfferForm({
     .filter((r) => r.enabled && r.label.trim() && Number(r.price) > 0)
     .map((r) => ({ key: r.key, label: r.label.trim(), price: Number(r.price) }));
 
-  const priceNum = Number(price) || 0;
-  const grandTotal = calculateOfferTotal(priceNum, activeAddons);
+  const hourlyRateNum = Number(hourlyRate) || 0;
+  const flightCost = calculateFlightCost(hourlyRateNum, totalFlightTimeMin);
+  const grandTotal = calculateOfferTotal(flightCost, activeAddons);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (!priceNum || priceNum <= 0) {
-      setError("Totalpris er påkrevd og må være positiv");
+    if (!hourlyRateNum || hourlyRateNum <= 0) {
+      setError("Timepris er påkrevd og må være positiv");
       return;
     }
 
@@ -91,9 +95,11 @@ export function OfferForm({
     setSubmitting(true);
 
     try {
-      const jsonPayload: Record<string, unknown> = { token, price: priceNum, addons: activeAddons };
-      if (hourlyRate) jsonPayload.hourlyRate = Number(hourlyRate);
-      if (hivRate) jsonPayload.hivRate = Number(hivRate);
+      const jsonPayload: Record<string, unknown> = {
+        token,
+        hourlyRate: hourlyRateNum,
+        addons: activeAddons,
+      };
       if (comment.trim()) jsonPayload.comment = comment.trim();
 
       const formData = new FormData();
@@ -138,8 +144,10 @@ export function OfferForm({
         <span className="font-semibold">{companyName}</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-gray-600">Grunnpris</span>
-        <span className="font-medium">{priceNum.toLocaleString("nb-NO")} NOK</span>
+        <span className="text-gray-600">
+          Flytidskostnad ({Math.ceil(totalFlightTimeMin)} min × {hourlyRateNum.toLocaleString("nb-NO")} NOK/t)
+        </span>
+        <span className="font-medium">{flightCost.toLocaleString("nb-NO")} NOK</span>
       </div>
       {activeAddons.map((a) => (
         <div key={a.key} className="flex justify-between text-gray-600">
@@ -182,59 +190,42 @@ export function OfferForm({
       </div>
 
       {/* Price fields */}
-      <div>
-        <label className="mb-1 block text-sm font-semibold text-gray-700">
-          Totalpris (NOK) <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="number"
-          min="1"
-          step="1"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
-          placeholder="f.eks. 45000"
-          required
-        />
-      </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="mb-1 block text-sm font-semibold text-gray-700">
-            Timepris overflygning (NOK/t)
+            Timepris (NOK/t) <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
-            min="0"
+            min="1"
             step="1"
             value={hourlyRate}
             onChange={(e) => setHourlyRate(e.target.value)}
             className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
             placeholder="f.eks. 25000"
+            required
           />
         </div>
         <div>
           <label className="mb-1 block text-sm font-semibold text-gray-700">
-            Timepris m/hiv (NOK/t)
+            Flytidskostnad
           </label>
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={hivRate}
-            onChange={(e) => setHivRate(e.target.value)}
-            className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
-            placeholder="f.eks. 35000"
-          />
+          <div className="flex h-[42px] items-center rounded-lg border border-gray-200 bg-gray-50 px-4 text-sm text-gray-700">
+            {Math.ceil(totalFlightTimeMin)} min × {hourlyRateNum.toLocaleString("nb-NO")} NOK/t ={" "}
+            <span className="ml-1 font-semibold">{flightCost.toLocaleString("nb-NO")} NOK</span>
+          </div>
         </div>
       </div>
+      <p className="-mt-4 text-xs text-gray-500">
+        Systemet beregner flytidskostnaden automatisk ut fra estimert flytid — du trenger bare å fylle inn timepris.
+      </p>
 
       {/* Add-ons */}
       <div>
         <label className="mb-2 block text-sm font-semibold text-gray-700">
           Tilleggskostnader
         </label>
-        <div className="space-y-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           {addonRows.map((row, i) => (
             <div key={row.key} className="flex items-center gap-2">
               {row.custom ? (
@@ -243,15 +234,15 @@ export function OfferForm({
                   value={row.label}
                   onChange={(e) => updateAddonLabel(i, e.target.value)}
                   placeholder="Navn på tillegg"
-                  className="w-40 rounded-lg border px-2.5 py-1.5 text-sm"
+                  className="min-w-0 flex-1 rounded-lg border px-2.5 py-1.5 text-sm"
                 />
               ) : (
-                <label className="flex w-40 shrink-0 items-center gap-2 text-sm text-gray-700">
+                <label className="flex flex-1 items-center gap-2 text-sm text-gray-700">
                   <input
                     type="checkbox"
                     checked={row.enabled}
                     onChange={() => toggleAddon(i)}
-                    className="h-4 w-4 rounded border-gray-300 text-brand-700"
+                    className="h-4 w-4 shrink-0 rounded border-gray-300 text-brand-700"
                   />
                   {row.label}
                 </label>
@@ -264,14 +255,14 @@ export function OfferForm({
                   value={row.price}
                   onChange={(e) => updateAddonPrice(i, e.target.value)}
                   placeholder="Pris (NOK)"
-                  className="w-32 rounded-lg border px-2.5 py-1.5 text-sm"
+                  className="w-28 shrink-0 rounded-lg border px-2.5 py-1.5 text-sm"
                 />
               )}
               {row.custom && (
                 <button
                   type="button"
                   onClick={() => removeAddon(i)}
-                  className="text-red-500 hover:text-red-700"
+                  className="shrink-0 text-red-500 hover:text-red-700"
                   title="Fjern"
                 >
                   <X className="h-4 w-4" />

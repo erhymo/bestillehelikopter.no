@@ -37,7 +37,11 @@ export const onOfferAccept = onDocumentUpdated(
     const jobId = event.params.jobId;
     const offerId = event.params.offerId;
     const companyId = afterData.companyId as string;
-    const price = afterData.price as number;
+    const basePrice = (afterData.price as number) ?? 0;
+    const addons = (afterData.addons as { price: number }[] | undefined) ?? [];
+    // Grand total = flytidskostnad + alle tillegg — det er dette kunden
+    // faktisk aksepterte, ikke bare grunnprisen.
+    const price = basePrice + addons.reduce((sum, a) => sum + a.price, 0);
 
     const db = admin.firestore();
 

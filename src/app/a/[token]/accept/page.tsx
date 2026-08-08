@@ -4,6 +4,7 @@ import { adminDb } from "@/lib/firebase/admin";
 import { OfferStatus, JobStatus, type OfferAddon } from "@/types";
 import { calculateOfferTotal, OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
 import { AcceptButton } from "@/components/accept/accept-button";
+import { TokenPageLayout } from "@/components/token-pages/token-page-layout";
 import Link from "next/link";
 import { trackServerPageView, trackServerFunnel } from "@/lib/analytics-server";
 
@@ -18,7 +19,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
   const payload = verifyOfferToken(token);
   if (!payload) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <TokenPageLayout>
         <div className="rounded-lg bg-white p-8 text-center shadow-lg">
           <h1 className="mb-2 text-xl font-bold text-red-600">
             Ugyldig eller utløpt lenke
@@ -28,7 +29,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
             er en feil.
           </p>
         </div>
-      </div>
+      </TokenPageLayout>
     );
   }
 
@@ -43,7 +44,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
 
   if (!jobSnap.exists || !offerSnap.exists) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <TokenPageLayout>
         <div className="rounded-lg bg-white p-8 text-center shadow-lg">
           <h1 className="mb-2 text-xl font-bold text-red-600">
             Forespørselen ble ikke funnet
@@ -52,7 +53,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
             Denne forespørselen finnes ikke lenger i systemet.
           </p>
         </div>
-      </div>
+      </TokenPageLayout>
     );
   }
 
@@ -80,8 +81,8 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
   if (jobData.status === JobStatus.Accepted) {
     const isThisOffer = jobData.acceptedCompanyId === companyId;
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
+      <TokenPageLayout>
+        <div className="rounded-lg bg-white p-8 shadow-lg">
           <div className="mb-3 flex justify-center">
             {isThisOffer ? (
               <CheckCircle2 className="h-10 w-10 text-green-600" />
@@ -100,23 +101,25 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
               : "Denne forespørselen er allerede tildelt et annet selskap."}
           </p>
           {isThisOffer && (
-            <Link
-              href={buildRatingUrl(token)}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-600"
-            >
-              <Star className="h-4 w-4" /> Gi vurdering
-            </Link>
+            <div className="mt-4 flex justify-center">
+              <Link
+                href={buildRatingUrl(token)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-600"
+              >
+                <Star className="h-4 w-4" /> Gi vurdering
+              </Link>
+            </div>
           )}
         </div>
-      </div>
+      </TokenPageLayout>
     );
   }
 
   // 5. If offer is not in "replied" status — cannot accept
   if (offerData.status !== OfferStatus.Replied) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
+      <TokenPageLayout>
+        <div className="rounded-lg bg-white p-8 shadow-lg">
           <h1 className="mb-2 text-xl font-bold text-brand-700">
             Tilbudet er ikke klart
           </h1>
@@ -125,7 +128,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
             ikke lenger tilgjengelig.
           </p>
         </div>
-      </div>
+      </TokenPageLayout>
     );
   }
 
@@ -133,8 +136,8 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
   const addons: OfferAddon[] = Array.isArray(offerData.addons) ? offerData.addons : [];
   const grandTotal = calculateOfferTotal(offerData.price ?? 0, addons);
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
+    <TokenPageLayout>
+      <div className="rounded-lg bg-white p-8 shadow-lg">
         <h1 className="mb-2 text-xl font-bold text-brand-700">
           Aksepter tilbud
         </h1>
@@ -150,7 +153,8 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">
-              {addons.length > 0 ? "Grunnpris" : "Totalpris"}
+              Flytidskostnad
+              {offerData.hourlyRate ? ` (${offerData.hourlyRate.toLocaleString("nb-NO")} NOK/t)` : ""}
             </span>
             <span className={addons.length > 0 ? "font-medium" : "text-lg font-bold text-brand-700"}>
               {offerData.price?.toLocaleString("nb-NO")} NOK
@@ -171,22 +175,6 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
             </div>
           )}
 
-          {offerData.hourlyRate && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Timepris overflygning</span>
-              <span className="font-medium">
-                {offerData.hourlyRate.toLocaleString("nb-NO")} NOK/t
-              </span>
-            </div>
-          )}
-          {offerData.hivRate && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Timepris m/hiv</span>
-              <span className="font-medium">
-                {offerData.hivRate.toLocaleString("nb-NO")} NOK/t
-              </span>
-            </div>
-          )}
           {offerData.comment && (
             <div className="border-t pt-3">
               <span className="text-gray-600">Kommentar fra selskapet</span>
@@ -199,6 +187,6 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
 
         <AcceptButton token={token} />
       </div>
-    </div>
+    </TokenPageLayout>
   );
 }

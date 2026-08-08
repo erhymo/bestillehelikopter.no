@@ -125,7 +125,7 @@ export const onRfqCreate = onDocumentCreated(
         ),
         price: null,
         hourlyRate: null,
-        hivRate: null,
+        addons: [],
         comment: null,
         attachmentRef: null,
         status: "pending",

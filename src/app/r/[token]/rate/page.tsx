@@ -3,6 +3,7 @@ import { verifyOfferToken } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
 import { JobStatus } from "@/types";
 import RatingForm from "@/components/rating/rating-form";
+import { TokenPageLayout } from "@/components/token-pages/token-page-layout";
 import { trackServerPageView, trackServerFunnel } from "@/lib/analytics-server";
 
 interface Props {
@@ -16,13 +17,13 @@ export default async function RatePage({ params }: Props) {
   const payload = verifyOfferToken(decodeURIComponent(token));
   if (!payload) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg text-center">
+      <TokenPageLayout>
+        <div className="rounded-lg bg-white p-8 text-center shadow-lg">
           <Lock className="mx-auto mb-3 h-10 w-10 text-gray-400" />
           <h1 className="mb-2 text-xl font-bold text-brand-700">Ugyldig lenke</h1>
           <p className="text-gray-600">Lenken er ugyldig eller utløpt.</p>
         </div>
-      </div>
+      </TokenPageLayout>
     );
   }
 
@@ -40,13 +41,13 @@ export default async function RatePage({ params }: Props) {
 
   if (!jobSnap.exists || !companySnap.exists) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg text-center">
+      <TokenPageLayout>
+        <div className="rounded-lg bg-white p-8 text-center shadow-lg">
           <XCircle className="mx-auto mb-3 h-10 w-10 text-red-500" />
           <h1 className="mb-2 text-xl font-bold text-brand-700">Ikke funnet</h1>
           <p className="text-gray-600">Oppdraget eller selskapet ble ikke funnet.</p>
         </div>
-      </div>
+      </TokenPageLayout>
     );
   }
 
@@ -60,13 +61,13 @@ export default async function RatePage({ params }: Props) {
     jobData.status !== JobStatus.Completed
   ) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg text-center">
+      <TokenPageLayout>
+        <div className="rounded-lg bg-white p-8 text-center shadow-lg">
           <Clock className="mx-auto mb-3 h-10 w-10 text-gray-400" />
           <h1 className="mb-2 text-xl font-bold text-brand-700">Kan ikke gi vurdering ennå</h1>
           <p className="text-gray-600">Du kan gi vurdering først etter at oppdraget er akseptert.</p>
         </div>
-      </div>
+      </TokenPageLayout>
     );
   }
 
@@ -80,8 +81,8 @@ export default async function RatePage({ params }: Props) {
   if (!existingRating.empty) {
     const ratingData = existingRating.docs[0].data();
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg text-center">
+      <TokenPageLayout>
+        <div className="rounded-lg bg-white p-8 text-center shadow-lg">
           <Star className="mx-auto mb-3 h-10 w-10 fill-yellow-400 text-yellow-400" />
           <h1 className="mb-2 text-xl font-bold text-brand-700">Allerede vurdert</h1>
           <p className="text-gray-600">
@@ -92,7 +93,7 @@ export default async function RatePage({ params }: Props) {
             <p className="mt-2 italic text-gray-600">&quot;{ratingData.comment}&quot;</p>
           )}
         </div>
-      </div>
+      </TokenPageLayout>
     );
   }
 
@@ -110,8 +111,8 @@ export default async function RatePage({ params }: Props) {
 
   // 6. Render rating form
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
+    <TokenPageLayout>
+      <div className="rounded-lg bg-white p-8 shadow-lg">
         <h1 className="mb-1 text-center text-xl font-bold text-brand-700">
           Gi vurdering
         </h1>
@@ -120,7 +121,6 @@ export default async function RatePage({ params }: Props) {
         </p>
         <RatingForm token={token} companyName={companyName} />
       </div>
-    </div>
+    </TokenPageLayout>
   );
 }
-

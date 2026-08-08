@@ -126,9 +126,8 @@ export interface Offer {
   companyId: string;
   token: string; // HMAC-signed, used in /tilbud/{token}
   tokenExpiresAt: Timestamp; // sentAt + 14 days
-  price: number | null; // grunnpris NOK, filled by company
-  hourlyRate: number | null; // timepris overflygning NOK/time
-  hivRate: number | null; // timepris med hiv NOK/time
+  price: number | null; // flytidskostnad NOK — systemberegnet: hourlyRate × jobbens flytid
+  hourlyRate: number | null; // timepris NOK/time, fylt inn av selskapet
   addons: OfferAddon[]; // tilleggskostnader valgt av selskapet (tilflyging, ventetid osv.)
   comment: string | null;
   attachmentRef: string | null; // Storage path for company's PDF
@@ -303,9 +302,7 @@ export interface CreateRfqInput {
 // ── Offer reply input (what the company sends) ──────
 export interface OfferReplyInput {
   token: string;
-  price: number; // grunnpris NOK
-  hourlyRate?: number; // timepris overflygning NOK/time
-  hivRate?: number; // timepris med hiv NOK/time
+  hourlyRate: number; // timepris NOK/time — systemet beregner price = hourlyRate × jobbens flytid
   addons?: OfferAddon[]; // tilleggskostnader
   comment?: string;
   // attachmentRef set server-side after upload
