@@ -112,6 +112,13 @@ export interface Job {
   expiresAt: Timestamp; // createdAt + 6 months
 }
 
+// ── Offer add-on (tilleggskostnad) ───────────────────
+export interface OfferAddon {
+  key: string;
+  label: string;
+  price: number;
+}
+
 // ── Offer (subcollection: jobs/{jobId}/offers/{offerId}) ──
 export interface Offer {
   _v: number;
@@ -119,9 +126,10 @@ export interface Offer {
   companyId: string;
   token: string; // HMAC-signed, used in /tilbud/{token}
   tokenExpiresAt: Timestamp; // sentAt + 14 days
-  price: number | null; // totalpris NOK, filled by company
+  price: number | null; // grunnpris NOK, filled by company
   hourlyRate: number | null; // timepris overflygning NOK/time
   hivRate: number | null; // timepris med hiv NOK/time
+  addons: OfferAddon[]; // tilleggskostnader valgt av selskapet (tilflyging, ventetid osv.)
   comment: string | null;
   attachmentRef: string | null; // Storage path for company's PDF
   status: OfferStatus;
@@ -295,9 +303,10 @@ export interface CreateRfqInput {
 // ── Offer reply input (what the company sends) ──────
 export interface OfferReplyInput {
   token: string;
-  price: number; // totalpris NOK
+  price: number; // grunnpris NOK
   hourlyRate?: number; // timepris overflygning NOK/time
   hivRate?: number; // timepris med hiv NOK/time
+  addons?: OfferAddon[]; // tilleggskostnader
   comment?: string;
   // attachmentRef set server-side after upload
 }

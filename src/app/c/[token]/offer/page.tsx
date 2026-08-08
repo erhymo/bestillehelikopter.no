@@ -1,7 +1,8 @@
 import { verifyOfferToken } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
 import { OfferForm } from "@/components/offer/offer-form";
-import { OfferStatus } from "@/types";
+import { OfferStatus, type OfferAddon } from "@/types";
+import { calculateOfferTotal, OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
 import { trackServerPageView, trackServerFunnel } from "@/lib/analytics-server";
 
 interface PageProps {
@@ -80,6 +81,8 @@ export default async function CompanyOfferPage({ params }: PageProps) {
     offerData.status === OfferStatus.Closed;
 
   if (alreadyReplied) {
+    const addons: OfferAddon[] = Array.isArray(offerData.addons) ? offerData.addons : [];
+    const grandTotal = calculateOfferTotal(offerData.price ?? 0, addons);
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
@@ -88,11 +91,25 @@ export default async function CompanyOfferPage({ params }: PageProps) {
           </h1>
           <div className="space-y-3 rounded-lg bg-gray-50 p-4 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">Totalpris</span>
+              <span className="text-gray-600">Grunnpris</span>
               <span className="font-semibold">
                 {offerData.price?.toLocaleString("nb-NO")} NOK
               </span>
             </div>
+            {addons.map((a) => (
+              <div key={a.key} className="flex justify-between text-gray-600">
+                <span>{a.label}</span>
+                <span>{a.price.toLocaleString("nb-NO")} NOK</span>
+              </div>
+            ))}
+            {addons.length > 0 && (
+              <div className="flex justify-between border-t pt-2">
+                <span className="font-semibold text-gray-900">Totalt tilbud</span>
+                <span className="font-bold text-brand-700">
+                  {grandTotal.toLocaleString("nb-NO")} NOK
+                </span>
+              </div>
+            )}
             {offerData.hourlyRate && (
               <div className="flex justify-between">
                 <span className="text-gray-600">Timepris overflygning</span>
@@ -116,6 +133,7 @@ export default async function CompanyOfferPage({ params }: PageProps) {
               </div>
             )}
           </div>
+          <p className="mt-3 text-xs text-gray-500">{OFFER_PRICE_DISCLAIMER}</p>
           <p className="mt-4 text-center text-sm text-gray-600">
             Du kan ikke endre tilbudet etter at det er sendt.
           </p>

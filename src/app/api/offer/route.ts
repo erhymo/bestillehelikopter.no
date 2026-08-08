@@ -4,16 +4,24 @@ import { NextResponse, type NextRequest } from "next/server";
 import { verifyOfferToken, buildAcceptUrl } from "@/lib/tokens";
 import { adminDb, adminStorage } from "@/lib/firebase/admin";
 import { OfferStatus } from "@/types";
+import { calculateOfferTotal, OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 
 // ── Zod schema ─────────────────────────────────────────────────
+
+const OfferAddonSchema = z.object({
+  key: z.string().min(1),
+  label: z.string().trim().min(1).max(100),
+  price: z.number().positive(),
+});
 
 const OfferPayloadSchema = z.object({
   token: z.string().min(1),
   price: z.number().positive("Totalpris må være positiv"),
   hourlyRate: z.number().positive("Timepris må være positiv").optional(),
   hivRate: z.number().positive("Hivpris må være positiv").optional(),
+  addons: z.array(OfferAddonSchema).max(20).default([]),
   comment: z.string().max(2000).optional(),
 });
 
@@ -40,7 +48,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { token, price, hourlyRate, hivRate, comment } = parsed.data;
+    const { token, price, hourlyRate, hivRate, addons, comment } = parsed.data;
 
     // 2. Verify token
     const payload = verifyOfferToken(token);
@@ -109,6 +117,7 @@ export async function POST(req: NextRequest) {
       price,
       hourlyRate: hourlyRate ?? null,
       hivRate: hivRate ?? null,
+      addons,
       comment: comment?.trim() || null,
       attachmentRef,
       status: OfferStatus.Replied,
@@ -131,14 +140,31 @@ export async function POST(req: NextRequest) {
       if (sgApiKey) {
         const customerName = jobData.customer.name ?? "Kunde";
         const compName = companyData.name as string;
+        const grandTotal = calculateOfferTotal(price, addons);
+        const addonRows = addons
+          .map(
+            (a) =>
+              `<tr><td style="padding:4px 0;color:#555">${a.label}</td><td style="padding:4px 0;text-align:right;color:#555">${a.price.toLocaleString("nb-NO")} NOK</td></tr>`,
+          )
+          .join("");
         const html = `<!DOCTYPE html>
 <html lang="no"><head><meta charset="utf-8"></head>
 <body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:20px;background:#f9f9f9">
 <div style="background:#fff;border-radius:8px;padding:32px;border:1px solid #e5e5e5">
 <h2 style="color:#1e3a5f;margin-top:0">Nytt tilbud mottatt</h2>
 <p>Hei ${customerName},</p>
-<p><strong>${compName}</strong> har sendt deg et tilbud på <strong>${price.toLocaleString("nb-NO")} NOK</strong>.</p>
+<p><strong>${compName}</strong> har sendt deg et tilbud på <strong>${grandTotal.toLocaleString("nb-NO")} NOK</strong>.</p>
+${
+  addons.length > 0
+    ? `<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
+<tr><td style="padding:4px 0;color:#555">Grunnpris</td><td style="padding:4px 0;text-align:right;color:#555">${price.toLocaleString("nb-NO")} NOK</td></tr>
+${addonRows}
+<tr><td style="padding:8px 0;border-top:1px solid #e5e5e5;font-weight:600">Totalt</td><td style="padding:8px 0;border-top:1px solid #e5e5e5;text-align:right;font-weight:600">${grandTotal.toLocaleString("nb-NO")} NOK</td></tr>
+</table>`
+    : ""
+}
 ${comment ? `<p style="color:#555"><em>"${comment.trim()}"</em></p>` : ""}
+<p style="font-size:13px;color:#888">${OFFER_PRICE_DISCLAIMER}</p>
 <div style="margin:24px 0;text-align:center">
 <a href="${acceptUrl}" style="display:inline-block;padding:14px 28px;background:#16a34a;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:16px">Se og aksepter tilbud</a>
 </div>
@@ -161,7 +187,7 @@ ${comment ? `<p style="color:#555"><em>"${comment.trim()}"</em></p>` : ""}
               email: process.env.SENDGRID_FROM_EMAIL ?? "post@bestillehelikopter.no",
               name: "BestilleHelikopter.no",
             },
-            subject: `Tilbud mottatt fra ${compName} — ${price.toLocaleString("nb-NO")} NOK`,
+            subject: `Tilbud mottatt fra ${compName} — ${grandTotal.toLocaleString("nb-NO")} NOK`,
             content: [{ type: "text/html", value: html }],
           }),
         }).catch((err: unknown) =>
