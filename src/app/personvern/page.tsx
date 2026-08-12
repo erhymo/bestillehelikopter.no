@@ -53,7 +53,7 @@ export default function PersonvernPage() {
         <section>
           <h2 className="mb-2 text-lg font-semibold text-gray-900">4. Lagring og sletting</h2>
           <p>
-            Forespørsler og tilhørende data slettes automatisk 6 måneder etter opprettelse. Du kan
+            Forespørsler og tilhørende data slettes automatisk 3 måneder etter opprettelse. Du kan
             be om sletting når som helst ved å kontakte oss.
           </p>
         </section>

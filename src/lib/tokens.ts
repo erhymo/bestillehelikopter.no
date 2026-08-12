@@ -9,7 +9,7 @@ import "server-only";
  *
  * PURPOSE:
  *   Generate and verify stateless HMAC-SHA256 tokens for:
- *   - Company offer view:   /tilbud/{token}
+ *   - Company offer view:   /c/{token}/offer
  *   - Company offer submit: POST /api/offer (token in body)
  *   - Customer accept:      POST /api/offer/accept (token in body)
  *
@@ -161,7 +161,7 @@ export function verifyOfferToken(token: string): TokenPayload | null {
  */
 export function buildOfferUrl(token: string): string {
   const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  return `${base}/tilbud/${encodeURIComponent(token)}`;
+  return `${base}/c/${encodeURIComponent(token)}/offer`;
 }
 
 /**
@@ -171,14 +171,5 @@ export function buildOfferUrl(token: string): string {
 export function buildAcceptUrl(token: string): string {
   const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   return `${base}/a/${encodeURIComponent(token)}/accept`;
-}
-
-/**
- * Build the full rating URL for a customer.
- * Reuses the offer token — available after job is accepted/completed.
- */
-export function buildRatingUrl(token: string): string {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  return `${base}/r/${encodeURIComponent(token)}/rate`;
 }
 

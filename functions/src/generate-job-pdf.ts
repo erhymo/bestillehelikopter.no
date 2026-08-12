@@ -59,8 +59,6 @@ interface JobData {
   drops: Drop[];
   estimates: FlightEstimate[];
   totalFlightTimeMin: number;
-  nettbruk: boolean;
-  over15m: boolean;
   desiredDate: string;
   flexibleDate: boolean;
   notes: string;
@@ -370,8 +368,6 @@ export async function generateJobPdf(jobId: string): Promise<PdfResult> {
   w.drawHeader("Oppdragsdetaljer", 12);
   w.drawField("Ønsket dato", job.desiredDate || "Ikke spesifisert");
   w.drawField("Fleksibel dato", job.flexibleDate ? "Ja" : "Nei");
-  w.drawField("Nettbruk", job.nettbruk ? "Ja" : "Nei");
-  w.drawField("Last over 15 m", job.over15m ? "Ja" : "Nei");
   if (job.notes) {
     w.drawField("Kommentarer", "");
     w.drawText(job.notes);

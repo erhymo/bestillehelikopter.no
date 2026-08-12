@@ -28,14 +28,6 @@ export enum OfferStatus {
   Closed = "closed",
 }
 
-export enum RatingScore {
-  Terrible = 1,
-  Poor = 2,
-  Ok = 3,
-  Good = 4,
-  Excellent = 5,
-}
-
 // ── Geo ─────────────────────────────────────────────
 export interface GeoPoint {
   lat: number;
@@ -96,12 +88,10 @@ export interface Job {
   pickup: GeoPoint;
   drops: Drop[];
   transportType: TransportType;
-  nettbruk: boolean;
-  over15m: boolean; // last over 15 meter lengde
   desiredDate: string; // ISO date string (YYYY-MM-DD) eller ""
   flexibleDate: boolean; // "Fleksibel på dato"
   notes: string; // fritekst-kommentarer fra kunden
-  selectedCompanyIds: string[]; // hvilke selskaper kunden vil sende forespørsel til
+  companyId: string; // fast mottaker (kunden velger ikke selv)
   imageRefs: string[]; // Storage paths, max 5
   estimates: FlightEstimate[];
   totalFlightTimeMin: number;
@@ -109,7 +99,7 @@ export interface Job {
   acceptedCompanyId: string | null;
   acceptedAt: Timestamp | null;
   createdAt: Timestamp;
-  expiresAt: Timestamp; // createdAt + 6 months
+  expiresAt: Timestamp; // createdAt + 3 months
 }
 
 // ── Offer add-on (tilleggskostnad) ───────────────────
@@ -124,11 +114,12 @@ export interface Offer {
   _v: number;
   id?: string;
   companyId: string;
-  token: string; // HMAC-signed, used in /tilbud/{token}
+  token: string; // HMAC-signed, used in /c/[token]/offer
   tokenExpiresAt: Timestamp; // sentAt + 14 days
   price: number | null; // flytidskostnad NOK — systemberegnet: hourlyRate × jobbens flytid
   hourlyRate: number | null; // timepris NOK/time, fylt inn av selskapet
-  addons: OfferAddon[]; // tilleggskostnader valgt av selskapet (tilflyging, ventetid osv.)
+  addons: OfferAddon[]; // tilleggskostnader (kun "Tilflygning/oppmøte")
+  totalPrice: number | null; // endelig totalpris vist til kunden — kan overstyres fritt i steg 2
   comment: string | null;
   attachmentRef: string | null; // Storage path for company's PDF
   status: OfferStatus;
@@ -139,38 +130,14 @@ export interface Offer {
   repliedAt: Timestamp | null;
 }
 
-// ── Company base location ────────────────────────────
-export interface BaseLocation {
-  lat: number;
-  lng: number;
-  label?: string; // e.g. "Bergen", "Kinsarvik"
-}
-
 // ── Company ─────────────────────────────────────────
+// Kun ett fast selskap (Airlift) i denne fasen — ikke lenger en liste
+// kunden velger fra. Feltsettet er derfor holdt minimalt.
 export interface Company {
   _v: number;
   id?: string;
   name: string;
-  email: string;
-  phone: string;
-  region: string[]; // e.g. ["nordland", "troms"]
-  baseLocations: BaseLocation[]; // selskapets baser, brukes til avstandssortering (nærmeste base vinner)
-  disabled: boolean;
-  avgRating: number; // denormalized
-  ratingCount: number; // denormalized
-  createdAt: Timestamp;
-}
-
-// ── Rating ──────────────────────────────────────────
-export interface Rating {
-  _v: number;
-  id?: string;
-  jobId: string;
-  companyId: string;
-  customerId: string; // sha256(phone).slice(0,16)
-  score: RatingScore;
-  comment: string;
-  approved: boolean; // 3-5 auto true; 1-2 requires admin
+  email: string; // eneste felt admin kan redigere
   createdAt: Timestamp;
 }
 
@@ -186,7 +153,7 @@ export interface MonthlyStats {
 // ── Event tracking (stats/{yearMonth}/events/{eventId}) ──
 export interface TrackingEvent {
   _v: number;
-  type: "rfq_created" | "offer_sent" | "offer_viewed" | "offer_replied" | "offer_accepted" | "job_completed" | "rating_submitted";
+  type: "rfq_created" | "offer_sent" | "offer_viewed" | "offer_replied" | "offer_accepted" | "job_completed";
   jobId: string;
   companyId?: string;
   offerId?: string;
@@ -197,26 +164,20 @@ export interface TrackingEvent {
 // ── First-party analytics ────────────────────────────
 export type AnalyticsPageName =
   | "customer_form"        // /
-  | "company_map"          // /c/[token]/map
   | "company_offer"        // /c/[token]/offer
   | "customer_accept"      // /a/[token]/accept
-  | "customer_rating"      // /r/[token]/rate
-  | "company_public"       // /selskap/[id]
   | "admin";               // /admin/*
 
 export type FunnelStep =
   | "form_start"           // user interacted with form
   | "pickup_set"           // pickup location chosen
   | "drops_added"          // at least one drop added
-  | "companies_selected"   // companies chosen
   | "customer_info_filled" // name/email/phone filled
   | "rfq_submitted"        // form submitted successfully
   | "offer_viewed"         // company viewed the offer page
   | "offer_replied"        // company submitted an offer
   | "accept_viewed"        // customer viewed accept page
-  | "accept_confirmed"     // customer confirmed acceptance
-  | "rating_viewed"        // customer viewed rating page
-  | "rating_submitted";    // customer submitted rating
+  | "accept_confirmed";    // customer confirmed acceptance
 
 export interface AnalyticsEvent {
   /** "pv" = page view, "fn" = funnel event */
@@ -275,7 +236,6 @@ type TimestampToString<T> = {
 export type JobDTO = TimestampToString<Omit<Job, "_v">> & { id: string };
 export type OfferDTO = TimestampToString<Omit<Offer, "_v">> & { id: string };
 export type CompanyDTO = TimestampToString<Omit<Company, "_v">> & { id: string };
-export type RatingDTO = TimestampToString<Omit<Rating, "_v">> & { id: string };
 
 // ── Create RFQ input (what the customer sends) ──────
 export interface CreateRfqInput {
@@ -290,12 +250,9 @@ export interface CreateRfqInput {
   pickup: Omit<GeoPoint, "elevation">; // elevation fetched server-side
   drops: Array<Omit<Drop, "elevation">>; // elevation fetched server-side
   transportType: TransportType;
-  nettbruk: boolean;
-  over15m: boolean;
   desiredDate: string;
   flexibleDate: boolean;
   notes: string;
-  selectedCompanyIds: string[];
   imageRefs: string[]; // already uploaded Storage paths
 }
 
@@ -315,15 +272,6 @@ export interface AcceptOfferInput {
   customerPhone: string; // must match job.customer.phone
 }
 
-// ── Rating input ────────────────────────────────────
-export interface CreateRatingInput {
-  jobId: string;
-  companyId: string;
-  score: RatingScore;
-  comment: string;
-  customerPhone: string;
-}
-
 // ═══════════════════════════════════════════════════════
 // Type Guards
 // ═══════════════════════════════════════════════════════
@@ -334,10 +282,6 @@ export function isJobStatus(value: unknown): value is JobStatus {
 
 export function isOfferStatus(value: unknown): value is OfferStatus {
   return Object.values(OfferStatus).includes(value as OfferStatus);
-}
-
-export function isRatingScore(value: unknown): value is RatingScore {
-  return typeof value === "number" && value >= 1 && value <= 5 && Number.isInteger(value);
 }
 
 export function isValidDrop(value: unknown): value is Drop {
@@ -364,4 +308,3 @@ export function isGeoPoint(value: unknown): value is GeoPoint {
     (v.address === undefined || typeof v.address === "string")
   );
 }
-

@@ -1,7 +1,6 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import type { TransportType } from "@/types";
 
 interface CustomerInfo {
   name: string;
@@ -15,11 +14,6 @@ interface CustomerInfo {
 interface CustomerInfoStepProps {
   data: CustomerInfo;
   onChange: (data: CustomerInfo) => void;
-  transportType: TransportType;
-  nettbruk: boolean;
-  onNettbrukChange: (v: boolean) => void;
-  over15m: boolean;
-  onOver15mChange: (v: boolean) => void;
   desiredDate: string;
   onDesiredDateChange: (v: string) => void;
   flexibleDate: boolean;
@@ -33,11 +27,6 @@ interface CustomerInfoStepProps {
 export function CustomerInfoStep({
   data,
   onChange,
-  transportType,
-  nettbruk,
-  onNettbrukChange,
-  over15m,
-  onOver15mChange,
   desiredDate,
   onDesiredDateChange,
   flexibleDate,
@@ -117,34 +106,6 @@ export function CustomerInfoStep({
         </label>
       </div>
 
-      {/* Checkboxes — kun relevant for underhengende last */}
-      {transportType === "sling" && (
-        <div className="space-y-2">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={nettbruk}
-              onChange={(e) => onNettbrukChange(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600"
-            />
-            <span className="text-sm text-gray-700">
-              Nettbruk (last henges under helikopteret)
-            </span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={over15m}
-              onChange={(e) => onOver15mChange(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600"
-            />
-            <span className="text-sm text-gray-700">
-              Last over 15 meter lengde
-            </span>
-          </label>
-        </div>
-      )}
-
       {/* Notes */}
       <div className="space-y-1">
         <label
@@ -165,4 +126,3 @@ export function CustomerInfoStep({
     </div>
   );
 }
-

@@ -13,8 +13,8 @@ const BATCH_LIMIT = 100;
 
 /**
  * Cron: Daglig kl 03:00 UTC (europe-west1)
- * - Finn jobber med expiresAt < nå
- * - Slett: job doc, offers subcollection, events, ratings, Storage-filer (bilder + PDF)
+ * - Finn jobber med expiresAt < nå (satt til createdAt + 3 mnd ved opprettelse)
+ * - Slett: job doc, offers subcollection, events, Storage-filer (bilder + PDF)
  *
  * Safety:
  * - DRY_RUN flag logs what would be deleted
@@ -133,17 +133,7 @@ async function deleteJobCompletely(
     console.log(`[autoDelete]   Deleted ${eventsSnap.size} event(s) for ${jobId}`);
   }
 
-  // 4. Delete related ratings
-  const ratingsSnap = await db
-    .collection("ratings")
-    .where("jobId", "==", jobId)
-    .get();
-  if (!ratingsSnap.empty) {
-    await batchDelete(db, ratingsSnap.docs.map((d) => d.ref));
-    console.log(`[autoDelete]   Deleted ${ratingsSnap.size} rating(s) for ${jobId}`);
-  }
-
-  // 5. Delete Storage files
+  // 4. Delete Storage files
   for (const filePath of filesToDelete) {
     try {
       await bucket.file(filePath).delete();
@@ -158,7 +148,7 @@ async function deleteJobCompletely(
     console.log(`[autoDelete]   Deleted ${filesToDelete.length} Storage file(s) for ${jobId}`);
   }
 
-  // 6. Delete the job document itself
+  // 5. Delete the job document itself
   await db.doc(`jobs/${jobId}`).delete();
 }
 
@@ -192,10 +182,6 @@ async function logDryRun(
     .collection("events")
     .where("jobId", "==", jobId)
     .get();
-  const ratingsSnap = await db
-    .collection("ratings")
-    .where("jobId", "==", jobId)
-    .get();
 
   const storageFiles: string[] = [];
   if (Array.isArray(jobData.imageRefs)) storageFiles.push(...jobData.imageRefs);
@@ -209,7 +195,7 @@ async function logDryRun(
   console.log(
     `[autoDelete][DRY RUN] Would delete job ${jobId}: ` +
       `${offersSnap.size} offers, ${eventsSnap.size} events, ` +
-      `${ratingsSnap.size} ratings, ${storageFiles.length} Storage files`,
+      `${storageFiles.length} Storage files`,
   );
 }
 

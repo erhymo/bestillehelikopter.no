@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { CheckCircle2, TriangleAlert } from "lucide-react";
 import { MapPicker, type MapMode } from "@/components/map/map-picker";
 import { MapToolbar } from "@/components/rfq/map-toolbar";
@@ -10,7 +10,6 @@ import { DropsStep } from "@/components/rfq/drops-step";
 import { CustomerInfoStep } from "@/components/rfq/customer-info-step";
 import { FlightSummary } from "@/components/rfq/flight-summary";
 import { ImageUpload } from "@/components/rfq/image-upload";
-import { CompanySelector } from "@/components/rfq/company-selector";
 import { OtpModal } from "@/components/phone/otp-modal";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -21,7 +20,6 @@ import { useLiveElevations } from "@/hooks/use-live-elevations";
 import type { GeoPoint, Drop, LoadItem, TransportType } from "@/types";
 import { formatCoordinate, parseCoordinateInput } from "@/lib/coordinates";
 import { validateEmail } from "@/lib/disposableEmail";
-import { reverseGeocodeRegion } from "@/lib/geocodeRegion";
 import { useAnalytics } from "@/hooks/use-analytics";
 
 interface CustomerData {
@@ -61,13 +59,9 @@ export function RfqForm() {
   const [coordinateError, setCoordinateError] = useState<string | null>(null);
   const [showCoordinateModal, setShowCoordinateModal] = useState(false);
   const [customer, setCustomer] = useState<CustomerData>(emptyCustomer);
-  const [nettbruk, setNettbruk] = useState(false);
-  const [over15m, setOver15m] = useState(false);
   const [desiredDate, setDesiredDate] = useState("");
   const [flexibleDate, setFlexibleDate] = useState(false);
   const [notes, setNotes] = useState("");
-  const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
-  const [pickupRegion, setPickupRegion] = useState<string | null>(null);
   const [showOtp, setShowOtp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -107,21 +101,6 @@ export function RfqForm() {
   }));
 
   const { estimates, totalFlightTimeMin } = useFlightEstimate(pickupGeo, dropsGeo, transportType);
-
-  // Suggest companies covering the pickup area (best-effort, never blocking).
-  useEffect(() => {
-    if (!pickup) {
-      setPickupRegion(null);
-      return;
-    }
-    let cancelled = false;
-    reverseGeocodeRegion(pickup.lat, pickup.lng).then((region) => {
-      if (!cancelled) setPickupRegion(region);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [pickup]);
 
   // ── Handlers ──
   const handlePickupSet = useCallback(
@@ -209,13 +188,9 @@ export function RfqForm() {
     setCoordinateInput("");
     setCoordinateError(null);
     setCustomer(emptyCustomer);
-    setNettbruk(false);
-    setOver15m(false);
     setDesiredDate("");
     setFlexibleDate(false);
     setNotes("");
-    setSelectedCompanyIds([]);
-    setPickupRegion(null);
     setSubmitError(null);
     setEmailError(null);
     setAcceptedTerms(false);
@@ -264,7 +239,6 @@ export function RfqForm() {
     customer.email.trim() &&
     customer.phone.trim() &&
     customer.invoiceAddress.trim() &&
-    selectedCompanyIds.length > 0 &&
     acceptedTerms;
 
   const coordinateTargetLabel =
@@ -333,12 +307,9 @@ export function RfqForm() {
           passengers: d.passengers,
         })),
         transportType,
-        nettbruk,
-        over15m,
         desiredDate,
         flexibleDate,
         notes: notes.trim(),
-        selectedCompanyIds,
         imageRefs,
       };
 
@@ -479,11 +450,6 @@ export function RfqForm() {
         <CustomerInfoStep
           data={customer}
           onChange={setCustomer}
-          transportType={transportType}
-          nettbruk={nettbruk}
-          onNettbrukChange={setNettbruk}
-          over15m={over15m}
-          onOver15mChange={setOver15m}
           desiredDate={desiredDate}
           onDesiredDateChange={setDesiredDate}
           flexibleDate={flexibleDate}
@@ -492,13 +458,6 @@ export function RfqForm() {
           onNotesChange={setNotes}
           emailError={emailError}
           onEmailBlur={() => checkEmail(customer.email)}
-        />
-
-        <CompanySelector
-          selected={selectedCompanyIds}
-          onChange={setSelectedCompanyIds}
-          region={pickupRegion}
-          pickup={pickup}
         />
 
         <ImageUpload

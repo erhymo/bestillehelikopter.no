@@ -6,6 +6,7 @@ import { fetchElevations } from "@/lib/googleMaps";
 import { estimateAll } from "@/lib/flight";
 import { JobStatus } from "@/types";
 import { validateEmail } from "@/lib/disposableEmail";
+import { RECIPIENT_COMPANY_ID } from "@/lib/recipientCompany";
 import { Timestamp } from "firebase-admin/firestore";
 import { z } from "zod";
 
@@ -47,15 +48,9 @@ const RfqPayloadSchema = z.object({
     .array(DropInputSchema)
     .min(1, "Minst ett leveringspunkt kreves")
     .max(26, "Maks 26 leveringspunkter"),
-  nettbruk: z.boolean().default(false),
-  over15m: z.boolean().default(false),
   desiredDate: z.string().default(""),
   flexibleDate: z.boolean().default(false),
   notes: z.string().max(2000).default(""),
-  selectedCompanyIds: z
-    .array(z.string().min(1))
-    .min(1, "Velg minst ett selskap")
-    .max(50),
   imageRefs: z.array(z.string()).max(5).default([]),
 });
 
@@ -106,12 +101,9 @@ export async function POST(req: NextRequest) {
       customer,
       pickup,
       drops,
-      nettbruk,
-      over15m,
       desiredDate,
       flexibleDate,
       notes,
-      selectedCompanyIds,
       imageRefs,
     } = parsed.data;
 
@@ -192,8 +184,8 @@ export async function POST(req: NextRequest) {
 
     // 5. Create Job document
     const now = Timestamp.now();
-    const sixMonths = Timestamp.fromMillis(
-      now.toMillis() + 180 * 24 * 60 * 60 * 1000,
+    const threeMonths = Timestamp.fromMillis(
+      now.toMillis() + 90 * 24 * 60 * 60 * 1000,
     );
 
     const jobData = {
@@ -211,12 +203,10 @@ export async function POST(req: NextRequest) {
       pickup: pickupWithElev,
       drops: dropsWithElev,
       transportType,
-      nettbruk,
-      over15m,
       desiredDate,
       flexibleDate,
       notes: notes.trim(),
-      selectedCompanyIds,
+      companyId: RECIPIENT_COMPANY_ID,
       imageRefs,
       estimates,
       totalFlightTimeMin,
@@ -224,7 +214,7 @@ export async function POST(req: NextRequest) {
       acceptedCompanyId: null,
       acceptedAt: null,
       createdAt: now,
-      expiresAt: sixMonths,
+      expiresAt: threeMonths,
     };
 
     const docRef = await adminDb.collection("jobs").add(jobData);
@@ -242,4 +232,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

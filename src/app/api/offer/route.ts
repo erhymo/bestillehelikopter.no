@@ -2,43 +2,29 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyOfferToken, buildAcceptUrl } from "@/lib/tokens";
-import { adminDb, adminStorage } from "@/lib/firebase/admin";
-import { OfferStatus } from "@/types";
-import { calculateOfferTotal, calculateFlightCost, OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
+import { adminDb } from "@/lib/firebase/admin";
+import { OfferStatus, type OfferAddon } from "@/types";
+import {
+  calculateFlightCost,
+  OFFER_PRICE_DISCLAIMER,
+  TILFLYGNING_ADDON_KEY,
+  TILFLYGNING_ADDON_LABEL,
+} from "@/lib/offerAddons";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 
 // ── Zod schema ─────────────────────────────────────────────────
 
-const OfferAddonSchema = z.object({
-  key: z.string().min(1),
-  label: z.string().trim().min(1).max(100),
-  price: z.number().positive(),
-});
-
 const OfferPayloadSchema = z.object({
   token: z.string().min(1),
   hourlyRate: z.number().positive("Timepris må være positiv"),
-  addons: z.array(OfferAddonSchema).max(20).default([]),
-  comment: z.string().max(2000).optional(),
+  tilflygningPrice: z.number().min(0).default(0),
+  totalPrice: z.number().positive("Totalpris må være positiv"),
 });
-
-// Max attachment size: 5 MB
-const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Parse multipart form data
-    const formData = await req.formData();
-    const jsonStr = formData.get("json");
-    if (typeof jsonStr !== "string") {
-      return NextResponse.json(
-        { ok: false, error: "Mangler JSON-data" },
-        { status: 400 },
-      );
-    }
-
-    const parsed = OfferPayloadSchema.safeParse(JSON.parse(jsonStr));
+    const parsed = OfferPayloadSchema.safeParse(await req.json());
     if (!parsed.success) {
       return NextResponse.json(
         { ok: false, error: parsed.error.issues[0]?.message ?? "Ugyldig data" },
@@ -46,7 +32,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { token, hourlyRate, addons, comment } = parsed.data;
+    const { token, hourlyRate, tilflygningPrice, totalPrice } = parsed.data;
+    const addons: OfferAddon[] =
+      tilflygningPrice > 0
+        ? [{ key: TILFLYGNING_ADDON_KEY, label: TILFLYGNING_ADDON_LABEL, price: tilflygningPrice }]
+        : [];
 
     // 2. Verify token
     const payload = verifyOfferToken(token);
@@ -90,58 +80,32 @@ export async function POST(req: NextRequest) {
     // estimate rather than a number the company typed in by hand.
     const price = calculateFlightCost(hourlyRate, jobData.totalFlightTimeMin ?? 0);
 
-    // 4. Handle optional PDF attachment
-    let attachmentRef: string | null = null;
-    const file = formData.get("attachment");
-    if (file && file instanceof File && file.size > 0) {
-      if (file.size > MAX_ATTACHMENT_BYTES) {
-        return NextResponse.json(
-          { ok: false, error: "Vedlegg kan ikke være større enn 5 MB" },
-          { status: 400 },
-        );
-      }
-      if (file.type !== "application/pdf") {
-        return NextResponse.json(
-          { ok: false, error: "Kun PDF-vedlegg er tillatt" },
-          { status: 400 },
-        );
-      }
-
-      const storagePath = `offers/${jobId}/${offerId}/attachment.pdf`;
-      const bucket = adminStorage.bucket();
-      const fileRef = bucket.file(storagePath);
-      const buffer = Buffer.from(await file.arrayBuffer());
-      await fileRef.save(buffer, {
-        contentType: "application/pdf",
-        metadata: { companyId },
-      });
-      attachmentRef = storagePath;
-    }
-
-    // 5. Update offer document
+    // 4. Update offer document
     const now = FieldValue.serverTimestamp();
     await offerRef.update({
       price,
       hourlyRate,
       addons,
-      comment: comment?.trim() || null,
-      attachmentRef,
+      totalPrice,
+      comment: null,
+      attachmentRef: null,
       status: OfferStatus.Replied,
       repliedAt: now,
     });
 
-    // 6. Fetch company for email to customer
+    // 5. Fetch company for email to customer
     const companySnap = await adminDb.doc(`companies/${companyId}`).get();
     const companyData = companySnap.data();
 
     if (jobData?.customer?.email && companyData?.name) {
-      // Send customer notification email with accept link via SendGrid REST API
+      // Send customer notification email with accept link via SendGrid REST API.
+      // Reply-To is set to the company's own email so replies reach them
+      // directly, even though the email itself is sent from our system.
       const acceptUrl = buildAcceptUrl(token);
       const sgApiKey = process.env.SENDGRID_API_KEY;
       if (sgApiKey) {
         const customerName = jobData.customer.name ?? "Kunde";
         const compName = companyData.name as string;
-        const grandTotal = calculateOfferTotal(price, addons);
         const addonRows = addons
           .map(
             (a) =>
@@ -154,13 +118,12 @@ export async function POST(req: NextRequest) {
 <div style="background:#fff;border-radius:8px;padding:32px;border:1px solid #e5e5e5">
 <h2 style="color:#1e3a5f;margin-top:0">Nytt tilbud mottatt</h2>
 <p>Hei ${customerName},</p>
-<p><strong>${compName}</strong> har sendt deg et tilbud på <strong>${grandTotal.toLocaleString("nb-NO")} NOK</strong>.</p>
+<p><strong>${compName}</strong> har sendt deg et tilbud på <strong>${totalPrice.toLocaleString("nb-NO")} NOK</strong>.</p>
 <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
 <tr><td style="padding:4px 0;color:#555">Flytidskostnad (${hourlyRate.toLocaleString("nb-NO")} NOK/t)</td><td style="padding:4px 0;text-align:right;color:#555">${price.toLocaleString("nb-NO")} NOK</td></tr>
 ${addonRows}
-<tr><td style="padding:8px 0;border-top:1px solid #e5e5e5;font-weight:600">Totalt</td><td style="padding:8px 0;border-top:1px solid #e5e5e5;text-align:right;font-weight:600">${grandTotal.toLocaleString("nb-NO")} NOK</td></tr>
+<tr><td style="padding:8px 0;border-top:1px solid #e5e5e5;font-weight:600">Totalt</td><td style="padding:8px 0;border-top:1px solid #e5e5e5;text-align:right;font-weight:600">${totalPrice.toLocaleString("nb-NO")} NOK</td></tr>
 </table>
-${comment ? `<p style="color:#555"><em>"${comment.trim()}"</em></p>` : ""}
 <p style="font-size:13px;color:#888">${OFFER_PRICE_DISCLAIMER}</p>
 <div style="margin:24px 0;text-align:center">
 <a href="${acceptUrl}" style="display:inline-block;padding:14px 28px;background:#16a34a;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:16px">Se og aksepter tilbud</a>
@@ -184,7 +147,8 @@ ${comment ? `<p style="color:#555"><em>"${comment.trim()}"</em></p>` : ""}
               email: process.env.SENDGRID_FROM_EMAIL ?? "post@bestillehelikopter.no",
               name: "BestilleHelikopter.no",
             },
-            subject: `Tilbud mottatt fra ${compName} — ${grandTotal.toLocaleString("nb-NO")} NOK`,
+            reply_to: { email: companyData.email as string, name: compName },
+            subject: `Tilbud mottatt fra ${compName} — ${totalPrice.toLocaleString("nb-NO")} NOK`,
             content: [{ type: "text/html", value: html }],
           }),
         }).catch((err: unknown) =>
@@ -193,7 +157,7 @@ ${comment ? `<p style="color:#555"><em>"${comment.trim()}"</em></p>` : ""}
       }
     }
 
-    // 7. Log event
+    // 6. Log event
     adminDb
       .collection("events")
       .add({

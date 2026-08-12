@@ -25,7 +25,6 @@ interface JobRow {
   pickup: string;
   dropCount: number;
   totalFlightTimeMin: number;
-  selectedCompanyIds: string[];
   acceptedCompanyId: string | null;
   createdAt: string;
   acceptedAt: string | null;

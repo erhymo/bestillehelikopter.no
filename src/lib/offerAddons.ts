@@ -1,26 +1,12 @@
-// Tilleggskostnader selskapet kan legge til et tilbud (inspirert av Vortix),
-// pluss delt logikk/tekst for at prisen alltid vises som veiledende.
+// Selskapet fyller kun inn timepris og oppmøte/tilflyging-pris — pluss delt
+// logikk/tekst for at prisen alltid vises som veiledende.
 
 import type { OfferAddon } from "@/types";
 
 export type { OfferAddon };
 
-export interface OfferAddonDefinition {
-  key: string;
-  label: string;
-}
-
-export const OFFER_ADDON_DEFINITIONS: OfferAddonDefinition[] = [
-  { key: "tilflyging", label: "Tilflyging" },
-  { key: "ventetid", label: "Ventetid" },
-  { key: "nettleie", label: "Nettleie" },
-  { key: "ekstra_mannskap", label: "Ekstra mannskap" },
-];
-
-/** Grand total shown to kunden: grunnpris + alle tillegg. */
-export function calculateOfferTotal(price: number, addons: OfferAddon[]): number {
-  return price + addons.reduce((sum, a) => sum + a.price, 0);
-}
+export const TILFLYGNING_ADDON_KEY = "tilflyging_oppmote";
+export const TILFLYGNING_ADDON_LABEL = "Tilflygning/oppmøte";
 
 /**
  * Grunnpris (flykostnad) = timepris × estimert flytid. Selskapet fyller inn

@@ -1,11 +1,10 @@
-import { CheckCircle2, Info, Star } from "lucide-react";
-import { verifyOfferToken, buildRatingUrl } from "@/lib/tokens";
+import { CheckCircle2, Info } from "lucide-react";
+import { verifyOfferToken } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
 import { OfferStatus, JobStatus, type OfferAddon } from "@/types";
-import { calculateOfferTotal, OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
+import { OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
 import { AcceptButton } from "@/components/accept/accept-button";
 import { TokenPageLayout } from "@/components/token-pages/token-page-layout";
-import Link from "next/link";
 import { trackServerPageView, trackServerFunnel } from "@/lib/analytics-server";
 
 interface PageProps {
@@ -100,16 +99,6 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
               ? `Du har allerede akseptert tilbudet fra ${companyName}. Selskapet vil kontakte deg.`
               : "Denne forespørselen er allerede tildelt et annet selskap."}
           </p>
-          {isThisOffer && (
-            <div className="mt-4 flex justify-center">
-              <Link
-                href={buildRatingUrl(token)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-600"
-              >
-                <Star className="h-4 w-4" /> Gi vurdering
-              </Link>
-            </div>
-          )}
         </div>
       </TokenPageLayout>
     );
@@ -134,7 +123,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
 
   // 6. Show offer details + accept button
   const addons: OfferAddon[] = Array.isArray(offerData.addons) ? offerData.addons : [];
-  const grandTotal = calculateOfferTotal(offerData.price ?? 0, addons);
+  const grandTotal = offerData.totalPrice ?? offerData.price ?? 0;
   return (
     <TokenPageLayout>
       <div className="rounded-lg bg-white p-8 shadow-lg">
@@ -156,7 +145,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
               Flytidskostnad
               {offerData.hourlyRate ? ` (${offerData.hourlyRate.toLocaleString("nb-NO")} NOK/t)` : ""}
             </span>
-            <span className={addons.length > 0 ? "font-medium" : "text-lg font-bold text-brand-700"}>
+            <span className="font-medium">
               {offerData.price?.toLocaleString("nb-NO")} NOK
             </span>
           </div>
@@ -166,21 +155,12 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
               <span>{a.price.toLocaleString("nb-NO")} NOK</span>
             </div>
           ))}
-          {addons.length > 0 && (
-            <div className="flex justify-between border-t pt-2">
-              <span className="font-semibold text-gray-900">Totalpris</span>
-              <span className="text-lg font-bold text-brand-700">
-                {grandTotal.toLocaleString("nb-NO")} NOK
-              </span>
-            </div>
-          )}
-
-          {offerData.comment && (
-            <div className="border-t pt-3">
-              <span className="text-gray-600">Kommentar fra selskapet</span>
-              <p className="mt-1 text-gray-800">{offerData.comment}</p>
-            </div>
-          )}
+          <div className="flex justify-between border-t pt-2">
+            <span className="font-semibold text-gray-900">Totalpris</span>
+            <span className="text-lg font-bold text-brand-700">
+              {grandTotal.toLocaleString("nb-NO")} NOK
+            </span>
+          </div>
         </div>
 
         <p className="mb-4 text-xs text-gray-500">{OFFER_PRICE_DISCLAIMER}</p>

@@ -8,8 +8,7 @@ import { useAdminAuth } from "@/hooks/use-admin-auth";
 interface QuickStats {
   jobCount: number;
   openJobs: number;
-  pendingRatings: number;
-  companyCount: number;
+  acceptedJobs: number;
 }
 
 export default function AdminPage() {
@@ -24,23 +23,15 @@ export default function AdminPage() {
     if (!idToken) return;
     setLoading(true);
 
-    const [jobsRes, ratingsRes, companiesRes] = await Promise.all([
-      fetch("/api/admin/jobs?limit=200", { headers: { Authorization: `Bearer ${idToken}` } }),
-      fetch("/api/admin/ratings?pending=true", { headers: { Authorization: `Bearer ${idToken}` } }),
-      fetch("/api/admin/companies", { headers: { Authorization: `Bearer ${idToken}` } }),
-    ]);
-
-    const [jobsData, ratingsData, companiesData] = await Promise.all([
-      jobsRes.json(),
-      ratingsRes.json(),
-      companiesRes.json(),
-    ]);
+    const jobsRes = await fetch("/api/admin/jobs?limit=200", {
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
+    const jobsData = await jobsRes.json();
 
     setStats({
       jobCount: jobsData.jobs?.length ?? 0,
       openJobs: jobsData.jobs?.filter((j: { status: string }) => j.status === "open").length ?? 0,
-      pendingRatings: ratingsData.ratings?.length ?? 0,
-      companyCount: companiesData.companies?.length ?? 0,
+      acceptedJobs: jobsData.jobs?.filter((j: { status: string }) => j.status === "accepted").length ?? 0,
     });
     setLoading(false);
   }, [idToken]);
@@ -76,7 +67,7 @@ export default function AdminPage() {
       {loading ? (
         <p className="text-sm text-gray-600">Laster...</p>
       ) : stats ? (
-        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="mb-8 grid grid-cols-3 gap-4">
           <Link href="/admin/jobber" className="rounded-lg border bg-white p-4 text-center hover:shadow-md transition-shadow">
             <p className="text-3xl font-bold text-brand-700">{stats.jobCount}</p>
             <p className="text-xs text-gray-600">Totalt jobber</p>
@@ -85,13 +76,9 @@ export default function AdminPage() {
             <p className="text-3xl font-bold text-blue-600">{stats.openJobs}</p>
             <p className="text-xs text-gray-600">Åpne jobber</p>
           </Link>
-          <Link href="/admin/vurderinger" className="rounded-lg border bg-white p-4 text-center hover:shadow-md transition-shadow">
-            <p className="text-3xl font-bold text-yellow-600">{stats.pendingRatings}</p>
-            <p className="text-xs text-gray-600">Ventende vurderinger</p>
-          </Link>
-          <Link href="/admin/selskaper" className="rounded-lg border bg-white p-4 text-center hover:shadow-md transition-shadow">
-            <p className="text-3xl font-bold text-green-600">{stats.companyCount}</p>
-            <p className="text-xs text-gray-600">Selskaper</p>
+          <Link href="/admin/jobber?status=accepted" className="rounded-lg border bg-white p-4 text-center hover:shadow-md transition-shadow">
+            <p className="text-3xl font-bold text-green-600">{stats.acceptedJobs}</p>
+            <p className="text-xs text-gray-600">Akseptert</p>
           </Link>
         </div>
       ) : null}

@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 import { generateJobPdf } from "./generate-job-pdf";
 import { mintOfferToken, buildOfferUrl, getTokenExpiration } from "./tokens";
 import { sendRfqEmail } from "./email";
+import { RECIPIENT_COMPANY_ID } from "./recipientCompany";
 
 // ── Types (mirrored subset) ───────────────────────────────────
 
@@ -15,31 +16,20 @@ interface JobCustomer {
 
 interface JobData {
   customer: JobCustomer;
-  selectedCompanyIds: string[];
   desiredDate: string;
   flexibleDate: boolean;
-  nettbruk: boolean;
-  over15m: boolean;
   totalFlightTimeMin: number;
   drops: Array<{ lat: number; lng: number }>;
 }
-
-interface CompanyDoc {
-  name: string;
-  email: string;
-  disabled: boolean;
-}
-
-
 
 // ── Main trigger ──────────────────────────────────────────────
 
 /**
  * Trigger: Firestore onCreate on jobs/{jobId}
  * 1. Generate PDF
- * 2. Create offer subdocs with signed tokens
- * 3. Send RFQ emails via SendGrid
- * 4. Update offer statuses to "sent"
+ * 2. Create the offer subdoc (single fixed recipient) with a signed token
+ * 3. Send the RFQ email via SendGrid
+ * 4. Update offer status to "sent"
  * 5. Write event log
  */
 export const onRfqCreate = onDocumentCreated(
@@ -73,139 +63,81 @@ export const onRfqCreate = onDocumentCreated(
       pdfBytes = new Uint8Array(0);
     }
 
-    // 2. Fetch selected companies
-    const companyIds = job.selectedCompanyIds ?? [];
-    if (companyIds.length === 0) {
-      console.warn(`[onRfqCreate] No companies selected for job ${jobId}`);
+    // 2. Fetch the fixed recipient company
+    const companySnap = await db.doc(`companies/${RECIPIENT_COMPANY_ID}`).get();
+    if (!companySnap.exists) {
+      console.error(
+        `[onRfqCreate] Recipient company doc "${RECIPIENT_COMPANY_ID}" not found for job ${jobId}`,
+      );
       return;
     }
+    const company = companySnap.data() as { name: string; email: string };
 
-    const companySnaps = await Promise.all(
-      companyIds.map((id) => db.doc(`companies/${id}`).get()),
-    );
-
-    const companies = companySnaps
-      .filter((snap) => snap.exists)
-      .map((snap) => ({
-        id: snap.id,
-        ...(snap.data() as CompanyDoc),
-      }))
-      .filter((c) => !c.disabled);
-
-    if (companies.length === 0) {
-      console.warn(`[onRfqCreate] No active companies found for job ${jobId}`);
-      return;
-    }
-
-    // 3. Create offer subdocs + mint tokens
-    const batch = db.batch();
-    const offerData: Array<{
-      offerId: string;
-      companyId: string;
-      companyName: string;
-      companyEmail: string;
-      token: string;
-      offerUrl: string;
-    }> = [];
+    // 3. Create offer subdoc + mint token
+    const offerRef = db.collection(`jobs/${jobId}/offers`).doc();
+    const token = mintOfferToken(jobId, RECIPIENT_COMPANY_ID, offerRef.id);
+    const offerUrl = buildOfferUrl(token);
 
     const tokenExpSeconds = getTokenExpiration(14);
     const now = admin.firestore.Timestamp.now();
 
-    for (const company of companies) {
-      const offerRef = db.collection(`jobs/${jobId}/offers`).doc();
-      const token = mintOfferToken(jobId, company.id, offerRef.id);
-      const offerUrl = buildOfferUrl(token);
+    await offerRef.set({
+      _v: 1,
+      companyId: RECIPIENT_COMPANY_ID,
+      token,
+      tokenExpiresAt: admin.firestore.Timestamp.fromMillis(tokenExpSeconds * 1000),
+      price: null,
+      hourlyRate: null,
+      addons: [],
+      totalPrice: null,
+      comment: null,
+      attachmentRef: null,
+      status: "pending",
+      emailOpens: 0,
+      linkClicks: 0,
+      sentAt: now,
+      viewedAt: null,
+      repliedAt: null,
+    });
 
-      batch.set(offerRef, {
-        _v: 1,
-        companyId: company.id,
-        token,
-        tokenExpiresAt: admin.firestore.Timestamp.fromMillis(
-          tokenExpSeconds * 1000,
-        ),
-        price: null,
-        hourlyRate: null,
-        addons: [],
-        comment: null,
-        attachmentRef: null,
-        status: "pending",
-        emailOpens: 0,
-        linkClicks: 0,
-        sentAt: now,
-        viewedAt: null,
-        repliedAt: null,
-      });
+    console.log(`[onRfqCreate] Created offer subdoc for job ${jobId}`);
 
-      offerData.push({
-        offerId: offerRef.id,
-        companyId: company.id,
-        companyName: company.name,
-        companyEmail: company.email,
-        token,
-        offerUrl,
-      });
-    }
-
-    await batch.commit();
-    console.log(
-      `[onRfqCreate] Created ${offerData.length} offer subdocs for job ${jobId}`,
-    );
-
-    // 4. Send emails via sendRfqEmail
+    // 4. Send email via sendRfqEmail
     const pdfBase64 =
-      pdfBytes.length > 0
-        ? Buffer.from(pdfBytes).toString("base64")
-        : null;
+      pdfBytes.length > 0 ? Buffer.from(pdfBytes).toString("base64") : null;
 
-    const emailPromises = offerData.map((offer) =>
-      sendRfqEmail({
-        jobId,
-        companyName: offer.companyName,
-        companyEmail: offer.companyEmail,
-        companyId: offer.companyId,
-        offerId: offer.offerId,
-        offerUrl: offer.offerUrl,
-        dropCount: job.drops.length,
-        totalFlightTimeMin: job.totalFlightTimeMin,
-        desiredDate: job.desiredDate,
-        flexibleDate: job.flexibleDate,
-        nettbruk: job.nettbruk,
-        over15m: job.over15m,
-        pdfBase64,
-      }),
-    );
+    const result = await sendRfqEmail({
+      jobId,
+      companyName: company.name,
+      companyEmail: company.email,
+      companyId: RECIPIENT_COMPANY_ID,
+      offerId: offerRef.id,
+      offerUrl,
+      dropCount: job.drops.length,
+      totalFlightTimeMin: job.totalFlightTimeMin,
+      desiredDate: job.desiredDate,
+      flexibleDate: job.flexibleDate,
+      pdfBase64,
+    });
 
-    const results = await Promise.all(emailPromises);
-
-    // 5. Update sent offers to status "sent"
-    const sentBatch = db.batch();
-    for (const result of results) {
-      if (result.success) {
-        sentBatch.update(db.doc(`jobs/${jobId}/offers/${result.offerId}`), {
-          status: "sent",
-        });
-      }
+    if (result.success) {
+      await offerRef.update({ status: "sent" });
     }
-    await sentBatch.commit();
-
-    const sentCount = results.filter((r) => r.success).length;
-    const failedCount = results.filter((r) => !r.success).length;
 
     console.log(
-      `[onRfqCreate] Emails sent: ${sentCount}/${results.length} (${failedCount} failed)`,
+      `[onRfqCreate] Email ${result.success ? "sent" : "FAILED"} for job ${jobId}${result.error ? `: ${result.error}` : ""}`,
     );
 
-    // 6. Write event log
+    // 5. Write event log
     await db.collection("events").add({
       type: "rfq.created",
       jobId,
-      companiesSent: sentCount,
-      companiesFailed: failedCount,
-      totalCompanies: companies.length,
+      companiesSent: result.success ? 1 : 0,
+      companiesFailed: result.success ? 0 : 1,
+      totalCompanies: 1,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     console.log(`[onRfqCreate] Done processing job ${jobId}`);
   },
 );
-

@@ -78,7 +78,7 @@ export function getTokenExpiration(
  * Build the full offer URL for a company.
  */
 export function buildOfferUrl(token: string): string {
-  return `${baseUrl.value()}/tilbud/${encodeURIComponent(token)}`;
+  return `${baseUrl.value()}/c/${encodeURIComponent(token)}/offer`;
 }
 
 /**

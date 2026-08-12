@@ -1,9 +1,9 @@
 import { verifyOfferToken } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
-import { OfferForm } from "@/components/offer/offer-form";
+import { OfferWizard } from "@/components/offer/offer-wizard";
 import { TokenPageLayout } from "@/components/token-pages/token-page-layout";
 import { OfferStatus, type OfferAddon } from "@/types";
-import { calculateOfferTotal, OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
+import { OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
 import { trackServerPageView, trackServerFunnel } from "@/lib/analytics-server";
 
 interface PageProps {
@@ -83,7 +83,7 @@ export default async function CompanyOfferPage({ params }: PageProps) {
 
   if (alreadyReplied) {
     const addons: OfferAddon[] = Array.isArray(offerData.addons) ? offerData.addons : [];
-    const grandTotal = calculateOfferTotal(offerData.price ?? 0, addons);
+    const grandTotal = offerData.totalPrice ?? offerData.price ?? 0;
     return (
       <TokenPageLayout>
         <div className="rounded-lg bg-white p-8 shadow-lg">
@@ -96,7 +96,7 @@ export default async function CompanyOfferPage({ params }: PageProps) {
                 Flytidskostnad
                 {offerData.hourlyRate ? ` (${offerData.hourlyRate.toLocaleString("nb-NO")} NOK/t)` : ""}
               </span>
-              <span className="font-semibold">
+              <span className="font-medium">
                 {offerData.price?.toLocaleString("nb-NO")} NOK
               </span>
             </div>
@@ -106,20 +106,12 @@ export default async function CompanyOfferPage({ params }: PageProps) {
                 <span>{a.price.toLocaleString("nb-NO")} NOK</span>
               </div>
             ))}
-            {addons.length > 0 && (
-              <div className="flex justify-between border-t pt-2">
-                <span className="font-semibold text-gray-900">Totalt tilbud</span>
-                <span className="font-bold text-brand-700">
-                  {grandTotal.toLocaleString("nb-NO")} NOK
-                </span>
-              </div>
-            )}
-            {offerData.comment && (
-              <div className="border-t pt-3">
-                <span className="text-gray-600">Kommentar</span>
-                <p className="mt-1 text-gray-800">{offerData.comment}</p>
-              </div>
-            )}
+            <div className="flex justify-between border-t pt-2">
+              <span className="font-semibold text-gray-900">Totalt tilbud</span>
+              <span className="font-bold text-brand-700">
+                {grandTotal.toLocaleString("nb-NO")} NOK
+              </span>
+            </div>
           </div>
           <p className="mt-3 text-xs text-gray-500">{OFFER_PRICE_DISCLAIMER}</p>
           <p className="mt-4 text-center text-sm text-gray-600">
@@ -130,19 +122,52 @@ export default async function CompanyOfferPage({ params }: PageProps) {
     );
   }
 
-  // 5. Show offer form
+  // 5. Show offer wizard
+  const drops = Array.isArray(jobData.drops) ? jobData.drops : [];
+  const transportType = jobData.transportType === "sling" ? "sling" : "passenger";
+  const estimates = Array.isArray(jobData.estimates) ? jobData.estimates : [];
+  const totalHiveCount =
+    transportType === "sling"
+      ? estimates.reduce(
+          (sum: number, e: { hiveCount?: number }) => sum + (e.hiveCount ?? 1),
+          0,
+        )
+      : drops.reduce(
+          (sum: number, d: { passengers?: number }) => sum + (d.passengers ?? 0),
+          0,
+        );
+
   return (
     <TokenPageLayout>
       <div className="rounded-lg bg-white p-8 shadow-lg">
         <h1 className="mb-2 text-xl font-bold text-brand-700">Gi tilbud</h1>
         <p className="mb-6 text-sm text-gray-600">
-          Fyll ut prisene og send tilbudet til kunden.
+          Fyll ut oppdragsinfo, se kartet og legg inn priser. Du kan gå tilbake
+          og endre før du sender tilbudet til kunden.
         </p>
-        <OfferForm
+        <OfferWizard
           token={token}
           companyName={companyName}
-          totalFlightTimeMin={jobData.totalFlightTimeMin ?? 0}
-          dropCount={jobData.drops?.length ?? 0}
+          job={{
+            pickup: {
+              lat: jobData.pickup?.lat ?? 0,
+              lng: jobData.pickup?.lng ?? 0,
+              address: jobData.pickup?.address,
+            },
+            drops: drops.map((d: { lat: number; lng: number; address?: string; hpieces?: number; passengers?: number }) => ({
+              lat: d.lat,
+              lng: d.lng,
+              address: d.address,
+              hpieces: d.hpieces ?? 0,
+              passengers: d.passengers ?? 0,
+            })),
+            transportType,
+            desiredDate: jobData.desiredDate ?? "",
+            flexibleDate: !!jobData.flexibleDate,
+            notes: jobData.notes ?? "",
+            totalFlightTimeMin: jobData.totalFlightTimeMin ?? 0,
+            totalHiveCount,
+          }}
         />
       </div>
     </TokenPageLayout>

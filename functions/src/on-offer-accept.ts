@@ -1,20 +1,17 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
-import {
-  sendAcceptConfirmationEmail,
-  sendOfferAcceptedEmail,
-  sendJobClosedEmail,
-} from "./email";
+import { sendAcceptConfirmationEmail, sendOfferAcceptedEmail } from "./email";
 
 /**
  * Trigger: Firestore onUpdate on jobs/{jobId}/offers/{offerId}
  * Når status endres til "accepted":
  * - Sett job.status = accepted, job.acceptedCompanyId, job.acceptedAt
- * - Lukk alle andre tilbud (status → "closed")
  * - Send bekreftelse til kunde
- * - Send "akseptert" til vinnende selskap
- * - Send "lukket" til andre selskaper
- * - Logg events
+ * - Send "akseptert" til selskapet
+ * - Logg event
+ *
+ * Det finnes kun ett tilbud per jobb (én fast mottaker), så det er ikke
+ * lenger noe "lukk andre tilbud"-steg å gjøre her.
  */
 export const onOfferAccept = onDocumentUpdated(
   {
@@ -37,11 +34,9 @@ export const onOfferAccept = onDocumentUpdated(
     const jobId = event.params.jobId;
     const offerId = event.params.offerId;
     const companyId = afterData.companyId as string;
-    const basePrice = (afterData.price as number) ?? 0;
-    const addons = (afterData.addons as { price: number }[] | undefined) ?? [];
-    // Grand total = flytidskostnad + alle tillegg — det er dette kunden
-    // faktisk aksepterte, ikke bare grunnprisen.
-    const price = basePrice + addons.reduce((sum, a) => sum + a.price, 0);
+    // totalPrice er den endelige, ev. overstyrte prisen fra steg 2 — det er
+    // dette kunden faktisk aksepterte, ikke bare den systemberegnede grunnprisen.
+    const price = (afterData.totalPrice as number) ?? (afterData.price as number) ?? 0;
 
     const db = admin.firestore();
 
@@ -56,22 +51,7 @@ export const onOfferAccept = onDocumentUpdated(
       acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // 2. Close all other offers
-    const offersSnap = await db
-      .collection(`jobs/${jobId}/offers`)
-      .where("companyId", "!=", companyId)
-      .get();
-
-    const batch = db.batch();
-    for (const doc of offersSnap.docs) {
-      batch.update(doc.ref, { status: "closed" });
-    }
-    await batch.commit();
-    console.log(
-      `[onOfferAccept] Closed ${offersSnap.size} other offers for job ${jobId}`,
-    );
-
-    // 3. Fetch job + winning company for emails
+    // 2. Fetch job + company for emails
     const [jobSnap, companySnap] = await Promise.all([
       db.doc(`jobs/${jobId}`).get(),
       db.doc(`companies/${companyId}`).get(),
@@ -94,11 +74,8 @@ export const onOfferAccept = onDocumentUpdated(
     const companyName = companyData.name as string;
     const companyEmail = companyData.email as string;
 
-    // 4. Send emails (fire-and-forget — log errors but don't fail)
-    const emailPromises: Promise<unknown>[] = [];
-
-    // 4a. Customer confirmation
-    emailPromises.push(
+    // 3. Send emails (fire-and-forget — log errors but don't fail)
+    const results = await Promise.allSettled([
       sendAcceptConfirmationEmail({
         jobId,
         customerEmail: customer.email,
@@ -108,10 +85,6 @@ export const onOfferAccept = onDocumentUpdated(
         offerId,
         companyId,
       }),
-    );
-
-    // 4b. Winning company notification
-    emailPromises.push(
       sendOfferAcceptedEmail({
         jobId,
         companyEmail,
@@ -123,32 +96,15 @@ export const onOfferAccept = onDocumentUpdated(
         offerId,
         companyId,
       }),
-    );
+    ]);
 
-    // 4c. Notify other companies (job closed)
-    for (const otherOffer of offersSnap.docs) {
-      const otherData = otherOffer.data();
-      const otherCompanyId = otherData.companyId as string;
-      const otherCompanySnap = await db
-        .doc(`companies/${otherCompanyId}`)
-        .get();
-      const otherCompanyData = otherCompanySnap.data();
-      if (otherCompanyData) {
-        emailPromises.push(
-          sendJobClosedEmail({
-            jobId,
-            companyEmail: otherCompanyData.email as string,
-            companyName: otherCompanyData.name as string,
-            offerId: otherOffer.id,
-            companyId: otherCompanyId,
-          }),
-        );
+    for (const result of results) {
+      if (result.status === "rejected") {
+        console.error("[onOfferAccept] Email failed:", result.reason);
       }
     }
 
-    await Promise.allSettled(emailPromises);
-
-    // 5. Log event
+    // 4. Log event
     await db.collection("events").add({
       type: "offer_accepted",
       jobId,
@@ -163,4 +119,3 @@ export const onOfferAccept = onDocumentUpdated(
     );
   },
 );
-

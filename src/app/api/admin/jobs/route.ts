@@ -55,7 +55,6 @@ export async function GET(req: NextRequest) {
           pickup: d.pickup?.address ?? "",
           dropCount: d.drops?.length ?? 0,
           totalFlightTimeMin: d.totalFlightTimeMin ?? 0,
-          selectedCompanyIds: d.selectedCompanyIds ?? [],
           acceptedCompanyId: d.acceptedCompanyId ?? null,
           createdAt: d.createdAt?.toDate?.()?.toISOString() ?? "",
           acceptedAt: d.acceptedAt?.toDate?.()?.toISOString() ?? null,

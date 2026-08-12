@@ -29,8 +29,6 @@ export interface RfqEmailData {
   totalFlightTimeMin: number;
   desiredDate: string;
   flexibleDate: boolean;
-  nettbruk: boolean;
-  over15m: boolean;
   pdfBase64: string | null; // null = no attachment
 }
 
@@ -62,14 +60,6 @@ export interface OfferAcceptedEmailData {
   companyId: string;
 }
 
-export interface JobClosedEmailData {
-  jobId: string;
-  companyEmail: string;
-  companyName: string;
-  offerId: string;
-  companyId: string;
-}
-
 // ── HTML builder ──────────────────────────────────────────────
 
 function escapeHtml(str: string): string {
@@ -86,10 +76,6 @@ export function buildRfqEmailHtml(data: RfqEmailData): string {
       (data.flexibleDate ? " (fleksibel)" : "")
     : "Ikke spesifisert";
 
-  const extras: string[] = [];
-  if (data.nettbruk) extras.push("Nettbruk");
-  if (data.over15m) extras.push("Last over 15m");
-
   return `<!DOCTYPE html>
 <html lang="no">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -102,8 +88,7 @@ export function buildRfqEmailHtml(data: RfqEmailData): string {
     <table style="border-collapse:collapse;width:100%;margin:16px 0">
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Ønsket dato</td><td style="padding:8px 12px;font-weight:600">${dateStr}</td></tr>
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Antall dropp</td><td style="padding:8px 12px;font-weight:600">${data.dropCount}</td></tr>
-      <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Est. flytid</td><td style="padding:8px 12px;font-weight:600">${data.totalFlightTimeMin.toFixed(1)} min</td></tr>
-      ${extras.length > 0 ? `<tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Tillegg</td><td style="padding:8px 12px;font-weight:600">${escapeHtml(extras.join(", "))}</td></tr>` : ""}
+      <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Est. flytid</td><td style="padding:8px 12px;font-weight:600">${Math.ceil(data.totalFlightTimeMin)} min</td></tr>
     </table>
 
     <p>PDF med fullstendig informasjon er vedlagt.</p>
@@ -294,45 +279,3 @@ export async function sendOfferAcceptedEmail(
   }
 }
 
-// ── Job closed email (to other companies) ───────────────────
-
-export async function sendJobClosedEmail(
-  data: JobClosedEmailData,
-): Promise<EmailResult> {
-  sgMail.setApiKey(sendgridApiKey.value());
-
-  const html = `<!DOCTYPE html>
-<html lang="no">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="font-family:Arial,Helvetica,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:20px;background:#f9f9f9">
-  <div style="background:#fff;border-radius:8px;padding:32px;border:1px solid #e5e5e5">
-    <h2 style="color:#1e3a5f;margin-top:0">Forespørsel avsluttet</h2>
-    <p>Hei ${escapeHtml(data.companyName)},</p>
-    <p>Kunden har valgt et annet selskap for denne forespørselen. Vi takker for at du deltok.</p>
-    <p>Vi håper du vil fortsette å motta forespørsler via BestilleHelikopter.no.</p>
-    <p style="font-size:13px;color:#888;margin-bottom:0">
-      Denne e-posten er sendt fra BestilleHelikopter.no.
-    </p>
-  </div>
-</body>
-</html>`;
-
-  try {
-    await sgMail.send({
-      to: data.companyEmail,
-      from: { email: sendgridFromEmail.value(), name: "BestilleHelikopter.no" },
-      subject: "Forespørsel avsluttet",
-      html,
-      customArgs: {
-        jobId: data.jobId,
-        companyId: data.companyId,
-        offerId: data.offerId,
-      },
-    });
-    return { offerId: data.offerId, success: true };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(`[email] Failed to send job-closed to ${data.companyEmail}: ${message}`);
-    return { offerId: data.offerId, success: false, error: message };
-  }
-}

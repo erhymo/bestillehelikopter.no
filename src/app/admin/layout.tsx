@@ -7,16 +7,14 @@ import { HelicopterIcon } from "@/components/ui/logo";
 import {
   LayoutDashboard,
   ClipboardList,
-  Building2,
-  Star,
+  Settings,
   TrendingUp,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Oversikt", icon: LayoutDashboard },
   { href: "/admin/jobber", label: "Jobber", icon: ClipboardList },
-  { href: "/admin/selskaper", label: "Selskaper", icon: Building2 },
-  { href: "/admin/vurderinger", label: "Vurderinger", icon: Star },
+  { href: "/admin/innstillinger", label: "Innstillinger", icon: Settings },
   { href: "/admin/statistikk", label: "Statistikk", icon: TrendingUp },
 ];
 
