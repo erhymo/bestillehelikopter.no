@@ -149,6 +149,7 @@ export default async function CompanyOfferPage({ params }: PageProps) {
           token={token}
           companyName={companyName}
           job={{
+            customerName: jobData.customer?.name ?? "",
             pickup: {
               lat: jobData.pickup?.lat ?? 0,
               lng: jobData.pickup?.lng ?? 0,

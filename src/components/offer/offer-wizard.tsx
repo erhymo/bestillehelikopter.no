@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Lock } from "lucide-react";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { OfferMapView } from "@/components/map/offer-map-view";
-import { calculateFlightCost, OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
+import { OfferPreview } from "@/components/offer/offer-preview";
+import { calculateFlightCost } from "@/lib/offerAddons";
+import { TILFLYGNING_ADDON_KEY, TILFLYGNING_ADDON_LABEL } from "@/lib/offerAddons";
 
 interface WizardDrop {
   lat: number;
@@ -15,6 +17,7 @@ interface WizardDrop {
 }
 
 interface WizardJob {
+  customerName: string;
   pickup: { lat: number; lng: number; address?: string };
   drops: WizardDrop[];
   transportType: "sling" | "passenger";
@@ -284,48 +287,44 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
       )}
 
       {step === 2 && (
-        <div className="space-y-6">
-          <div className="space-y-3 rounded-lg bg-gray-50 p-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Selskap</span>
-              <span className="font-semibold">{companyName}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">
-                Flytidskostnad ({Math.ceil(job.totalFlightTimeMin)} min × {hourlyRateNum.toLocaleString("nb-NO")} NOK/t)
-              </span>
-              <span className="font-medium">{flightCost.toLocaleString("nb-NO")} NOK</span>
-            </div>
-            {tilflygningNum > 0 && (
-              <div className="flex justify-between text-gray-600">
-                <span>Tilflygning/oppmøte</span>
-                <span>{tilflygningNum.toLocaleString("nb-NO")} NOK</span>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Slik vil kunden se tilbudet. Du kan kun endre totalprisen her — resten er
+            akkurat det kunden mottar.
+          </p>
+
+          <OfferPreview
+            variant="embedded"
+            customerName={job.customerName}
+            companyName={companyName}
+            hourlyRate={hourlyRateNum}
+            flightCost={flightCost}
+            addons={
+              tilflygningNum > 0
+                ? [{ key: TILFLYGNING_ADDON_KEY, label: TILFLYGNING_ADDON_LABEL, price: tilflygningNum }]
+                : []
+            }
+            totalPrice={totalPrice}
+            editableTotalPrice={{
+              value: totalPriceOverride ?? String(computedTotal),
+              onChange: setTotalPriceOverride,
+            }}
+            actionSlot={
+              <div>
+                <button
+                  type="button"
+                  disabled
+                  className="w-full cursor-not-allowed rounded-lg bg-green-600/50 px-6 py-3 font-semibold text-white"
+                >
+                  Aksepter tilbud
+                </button>
+                <p className="mt-2 flex items-center justify-center gap-1 text-center text-xs text-gray-500">
+                  <Lock className="h-3 w-3" />
+                  Forhåndsvisning — dette er kundens knapp, ikke aktiv her
+                </p>
               </div>
-            )}
-            <div className="flex justify-between border-t pt-2 text-gray-600">
-              <span>Systemberegnet totalpris</span>
-              <span>{computedTotal.toLocaleString("nb-NO")} NOK</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-gray-700">
-              Totalpris til kunde (NOK) <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={totalPriceOverride ?? String(computedTotal)}
-              onChange={(e) => setTotalPriceOverride(e.target.value)}
-              className="w-full rounded-lg border px-4 py-2.5 text-lg font-semibold focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Prisen kan justeres fritt — dette er beløpet kunden vil se og akseptere.
-            </p>
-          </div>
-
-          <p className="text-xs text-gray-500">{OFFER_PRICE_DISCLAIMER}</p>
+            }
+          />
 
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

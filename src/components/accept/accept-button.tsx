@@ -75,8 +75,8 @@ export function AcceptButton({ token }: AcceptButtonProps) {
       ) : (
         <div className="space-y-3">
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <strong>Er du sikker?</strong> Når du aksepterer kan det ikke angres.
-            Andre tilbud vil bli lukket.
+            <strong>Er du sikker?</strong> Når du aksepterer blir oppdraget
+            tildelt, og det kan ikke angres.
           </div>
           <div className="flex gap-3">
             <button

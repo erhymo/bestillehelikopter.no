@@ -2,8 +2,8 @@ import { CheckCircle2, Info } from "lucide-react";
 import { verifyOfferToken } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
 import { OfferStatus, JobStatus, type OfferAddon } from "@/types";
-import { OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
 import { AcceptButton } from "@/components/accept/accept-button";
+import { OfferPreview } from "@/components/offer/offer-preview";
 import { TokenPageLayout } from "@/components/token-pages/token-page-layout";
 import { trackServerPageView, trackServerFunnel } from "@/lib/analytics-server";
 
@@ -121,52 +121,20 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
     );
   }
 
-  // 6. Show offer details + accept button
+  // 6. Show offer preview + accept button
   const addons: OfferAddon[] = Array.isArray(offerData.addons) ? offerData.addons : [];
   const grandTotal = offerData.totalPrice ?? offerData.price ?? 0;
   return (
     <TokenPageLayout>
-      <div className="rounded-lg bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-xl font-bold text-brand-700">
-          Aksepter tilbud
-        </h1>
-        <p className="mb-6 text-sm text-gray-600">
-          Gjennomgå tilbudet og aksepter for å tildele oppdraget.
-        </p>
-
-        {/* Offer details */}
-        <div className="mb-6 space-y-3 rounded-lg bg-gray-50 p-4 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Selskap</span>
-            <span className="font-semibold">{companyName}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">
-              Flytidskostnad
-              {offerData.hourlyRate ? ` (${offerData.hourlyRate.toLocaleString("nb-NO")} NOK/t)` : ""}
-            </span>
-            <span className="font-medium">
-              {offerData.price?.toLocaleString("nb-NO")} NOK
-            </span>
-          </div>
-          {addons.map((a) => (
-            <div key={a.key} className="flex justify-between text-gray-600">
-              <span>{a.label}</span>
-              <span>{a.price.toLocaleString("nb-NO")} NOK</span>
-            </div>
-          ))}
-          <div className="flex justify-between border-t pt-2">
-            <span className="font-semibold text-gray-900">Totalpris</span>
-            <span className="text-lg font-bold text-brand-700">
-              {grandTotal.toLocaleString("nb-NO")} NOK
-            </span>
-          </div>
-        </div>
-
-        <p className="mb-4 text-xs text-gray-500">{OFFER_PRICE_DISCLAIMER}</p>
-
-        <AcceptButton token={token} />
-      </div>
+      <OfferPreview
+        customerName={jobData.customer?.name ?? ""}
+        companyName={companyName}
+        hourlyRate={offerData.hourlyRate ?? null}
+        flightCost={offerData.price ?? 0}
+        addons={addons}
+        totalPrice={grandTotal}
+        actionSlot={<AcceptButton token={token} />}
+      />
     </TokenPageLayout>
   );
 }
