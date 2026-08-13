@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
 <p>Hei ${customerName},</p>
 <p><strong>${compName}</strong> har sendt deg et tilbud på <strong>${totalPrice.toLocaleString("nb-NO")} NOK</strong>.</p>
 <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
-<tr><td style="padding:4px 0;color:#555">Flytidskostnad (${hourlyRate.toLocaleString("nb-NO")} NOK/t)</td><td style="padding:4px 0;text-align:right;color:#555">${price.toLocaleString("nb-NO")} NOK</td></tr>
+<tr><td style="padding:4px 0;color:#555">Flytidskostnad</td><td style="padding:4px 0;text-align:right;color:#555">${price.toLocaleString("nb-NO")} NOK</td></tr>
 ${addonRows}
 <tr><td style="padding:8px 0;border-top:1px solid #e5e5e5;font-weight:600">Totalt</td><td style="padding:8px 0;border-top:1px solid #e5e5e5;text-align:right;font-weight:600">${totalPrice.toLocaleString("nb-NO")} NOK</td></tr>
 </table>

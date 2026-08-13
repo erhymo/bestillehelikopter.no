@@ -129,7 +129,6 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
       <OfferPreview
         customerName={jobData.customer?.name ?? ""}
         companyName={companyName}
-        hourlyRate={offerData.hourlyRate ?? null}
         flightCost={offerData.price ?? 0}
         addons={addons}
         totalPrice={grandTotal}

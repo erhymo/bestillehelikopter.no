@@ -10,7 +10,6 @@ interface EditableTotalPrice {
 interface OfferPreviewProps {
   customerName: string;
   companyName: string;
-  hourlyRate: number | null;
   flightCost: number;
   addons: OfferAddon[];
   totalPrice: number;
@@ -30,7 +29,6 @@ interface OfferPreviewProps {
 export function OfferPreview({
   customerName,
   companyName,
-  hourlyRate,
   flightCost,
   addons,
   totalPrice,
@@ -57,10 +55,7 @@ export function OfferPreview({
           <span className="font-semibold">{companyName}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">
-            Flytidskostnad
-            {hourlyRate ? ` (${hourlyRate.toLocaleString("nb-NO")} NOK/t)` : ""}
-          </span>
+          <span className="text-gray-600">Flytidskostnad</span>
           <span className="font-medium">{flightCost.toLocaleString("nb-NO")} NOK</span>
         </div>
         {addons.map((a) => (
