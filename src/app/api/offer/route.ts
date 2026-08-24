@@ -5,7 +5,6 @@ import { verifyOfferToken, buildAcceptUrl } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
 import { OfferStatus, type OfferAddon } from "@/types";
 import {
-  calculateFlightCost,
   OFFER_PRICE_DISCLAIMER,
   TILFLYGNING_ADDON_KEY,
   TILFLYGNING_ADDON_LABEL,
@@ -75,10 +74,11 @@ export async function POST(req: NextRequest) {
     }
 
     const jobData = jobSnap.data()!;
-    // System — not the company — multiplies hourly rate by the job's
-    // estimated flight time, so the base price always matches the real
-    // estimate rather than a number the company typed in by hand.
-    const price = calculateFlightCost(hourlyRate, jobData.totalFlightTimeMin ?? 0);
+    // Flytidskostnad = totalpris minus tillegg — utledet fra totalprisen
+    // (som kan være rundet av selskapet), ikke regnet uavhengig fra
+    // timepris × flytid. Slik stemmer linjene alltid overens med totalen
+    // kunden faktisk ser og aksepterer.
+    const price = totalPrice - tilflygningPrice;
 
     // 4. Update offer document
     const now = FieldValue.serverTimestamp();
