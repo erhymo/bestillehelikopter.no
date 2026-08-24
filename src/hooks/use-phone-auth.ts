@@ -47,12 +47,14 @@ export function usePhoneAuth() {
         const verifier = getRecaptcha();
         const result = await signInWithPhoneNumber(auth, formatted, verifier);
         confirmationRef.current = result;
+        return { success: true };
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Kunne ikke sende SMS";
         setError(msg);
         // Reset recaptcha on error
         recaptchaRef.current?.clear();
         recaptchaRef.current = null;
+        return { success: false };
       } finally {
         setLoading(false);
       }

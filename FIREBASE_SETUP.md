@@ -10,7 +10,7 @@ firebase use bestillehelikopter-prod
 ## 2. Auth: Telefon (+47)
 - Firebase Console → Authentication → Sign-in method
 - Aktiver "Phone" provider
-- Under "Phone numbers for testing" legg til et testnummer (f.eks. +47 99999999 / code 123456)
+- Under "Phone numbers for testing" legg til et testnummer (registrert: +47 90000001 / code 123456)
 - reCAPTCHA: Sett til "Normal" (ikke invisible) for produksjon
 - SMS Region Policy: Sett "Only allow" → Norway (+47)
 

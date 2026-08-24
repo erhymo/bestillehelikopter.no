@@ -10,7 +10,7 @@ interface OtpModalProps {
   open: boolean;
   onClose: () => void;
   phone: string;
-  onSendOtp: (phone: string) => Promise<void>;
+  onSendOtp: (phone: string) => Promise<{ success: boolean }>;
   onVerifyOtp: (code: string) => Promise<{ success: boolean }>;
   loading: boolean;
   error: string | null;
@@ -43,8 +43,10 @@ export function OtpModal({
   }, [open]);
 
   const handleSend = async () => {
-    await onSendOtp(phone);
-    setStep("verify");
+    const result = await onSendOtp(phone);
+    if (result.success) {
+      setStep("verify");
+    }
   };
 
   const handleVerify = async () => {
