@@ -26,6 +26,8 @@ export interface RfqEmailData {
   offerId: string;
   offerUrl: string;
   dropCount: number;
+  hiveCount: number;
+  transportType: "sling" | "passenger";
   totalFlightTimeMin: number;
   desiredDate: string;
   flexibleDate: boolean;
@@ -87,8 +89,9 @@ export function buildRfqEmailHtml(data: RfqEmailData): string {
 
     <table style="border-collapse:collapse;width:100%;margin:16px 0">
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Ønsket dato</td><td style="padding:8px 12px;font-weight:600">${dateStr}</td></tr>
-      <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Antall dropp</td><td style="padding:8px 12px;font-weight:600">${data.dropCount}</td></tr>
+      <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">${data.transportType === "sling" ? "Antall hiv" : "Antall passasjerer"}</td><td style="padding:8px 12px;font-weight:600">${data.hiveCount}</td></tr>
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Est. flytid</td><td style="padding:8px 12px;font-weight:600">${Math.ceil(data.totalFlightTimeMin)} min</td></tr>
+      ${data.dropCount > 1 ? `<tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Merk</td><td style="padding:8px 12px;font-weight:600">Flere dropp-punkter</td></tr>` : ""}
     </table>
 
     <p>PDF med fullstendig informasjon er vedlagt.</p>
@@ -112,7 +115,8 @@ export function buildRfqEmailHtml(data: RfqEmailData): string {
 // ── Subject builder ───────────────────────────────────────────
 
 export function buildRfqSubject(data: RfqEmailData): string {
-  const parts = [`Ny helikopterforespørsel — ${data.dropCount} dropp`];
+  const unit = data.transportType === "sling" ? "hiv" : "passasjerer";
+  const parts = [`Ny helikopterforespørsel — ${data.hiveCount} ${unit}`];
   if (data.desiredDate) parts.push(data.desiredDate);
   return parts.join(", ");
 }

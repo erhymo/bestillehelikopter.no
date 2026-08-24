@@ -19,7 +19,9 @@ interface JobData {
   desiredDate: string;
   flexibleDate: boolean;
   totalFlightTimeMin: number;
-  drops: Array<{ lat: number; lng: number }>;
+  transportType: "sling" | "passenger";
+  drops: Array<{ lat: number; lng: number; passengers?: number }>;
+  estimates: Array<{ hiveCount?: number }>;
 }
 
 // ── Main trigger ──────────────────────────────────────────────
@@ -106,6 +108,11 @@ export const onRfqCreate = onDocumentCreated(
     const pdfBase64 =
       pdfBytes.length > 0 ? Buffer.from(pdfBytes).toString("base64") : null;
 
+    const hiveCount =
+      job.transportType === "sling"
+        ? job.estimates.reduce((sum, e) => sum + (e.hiveCount ?? 1), 0)
+        : job.drops.reduce((sum, d) => sum + (d.passengers ?? 0), 0);
+
     const result = await sendRfqEmail({
       jobId,
       companyName: company.name,
@@ -114,6 +121,8 @@ export const onRfqCreate = onDocumentCreated(
       offerId: offerRef.id,
       offerUrl,
       dropCount: job.drops.length,
+      hiveCount,
+      transportType: job.transportType,
       totalFlightTimeMin: job.totalFlightTimeMin,
       desiredDate: job.desiredDate,
       flexibleDate: job.flexibleDate,
