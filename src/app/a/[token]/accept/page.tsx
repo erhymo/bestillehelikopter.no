@@ -1,4 +1,4 @@
-import { CheckCircle2, Info } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { verifyOfferToken } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
 import { OfferStatus, JobStatus, type OfferAddon } from "@/types";
@@ -78,26 +78,17 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
 
   // 4. If job is already accepted
   if (jobData.status === JobStatus.Accepted) {
-    const isThisOffer = jobData.acceptedCompanyId === companyId;
     return (
       <TokenPageLayout>
         <div className="rounded-lg bg-white p-8 shadow-lg">
           <div className="mb-3 flex justify-center">
-            {isThisOffer ? (
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
-            ) : (
-              <Info className="h-10 w-10 text-blue-500" />
-            )}
+            <CheckCircle2 className="h-10 w-10 text-green-600" />
           </div>
           <h1 className="mb-2 text-center text-xl font-bold text-brand-700">
-            {isThisOffer
-              ? "Tilbudet er allerede akseptert"
-              : "Et annet tilbud er akseptert"}
+            Tilbudet er allerede akseptert
           </h1>
           <p className="text-center text-gray-600">
-            {isThisOffer
-              ? `Du har allerede akseptert tilbudet fra ${companyName}. Selskapet vil kontakte deg.`
-              : "Denne forespørselen er allerede tildelt et annet selskap."}
+            Du har allerede akseptert tilbudet fra {companyName}. Selskapet vil kontakte deg.
           </p>
         </div>
       </TokenPageLayout>

@@ -206,7 +206,7 @@ export async function sendAcceptConfirmationEmail(
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Selskap</td><td style="padding:8px 12px;font-weight:600">${escapeHtml(data.companyName)}</td></tr>
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Pris</td><td style="padding:8px 12px;font-weight:600">${data.price.toLocaleString("nb-NO")} NOK</td></tr>
     </table>
-    <p>Selskapet har fått beskjed og vil kontakte deg direkte for å avtale videre detaljer.</p>
+    <p>${escapeHtml(data.companyName)} har fått beskjed, og kommer tilbake til deg med forslag til tidspunkt for gjennomføring av oppdraget.</p>
     <p style="font-size:13px;color:#888;margin-bottom:0">
       Denne e-posten er sendt fra BestilleHelikopter.no.
     </p>
