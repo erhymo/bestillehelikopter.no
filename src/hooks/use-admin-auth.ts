@@ -59,11 +59,17 @@ export function useAdminAuth(): AdminAuthState {
         // User closed the popup themselves — not an error worth surfacing.
         return;
       }
-      setSignInError(
-        code === "auth/popup-blocked"
-          ? "Nettleseren blokkerte innloggingsvinduet. Tillat popup-vinduer for denne siden og prøv igjen."
-          : "Innlogging feilet. Prøv igjen.",
-      );
+      if (code === "auth/popup-blocked") {
+        setSignInError(
+          "Nettleseren blokkerte innloggingsvinduet. Tillat popup-vinduer for denne siden og prøv igjen.",
+        );
+      } else if (code === "auth/unauthorized-domain") {
+        setSignInError(
+          `Dette domenet (${window.location.hostname}) er ikke godkjent for innlogging. Kontakt utvikler for å legge det til i Firebase.`,
+        );
+      } else {
+        setSignInError(`Innlogging feilet (${code ?? "ukjent feil"}). Prøv igjen.`);
+      }
     }
   }, []);
 
