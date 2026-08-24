@@ -72,11 +72,16 @@ export function usePhoneAuth() {
       const credential = await confirmationRef.current.confirm(code);
       setUser(credential.user);
       setVerified(true);
-      return { success: true };
+      // Return the fresh user directly — callers that need to act
+      // immediately (e.g. auto-submitting a form right after verifying)
+      // can't rely on `verified`/`user` from this hook's own state, since
+      // that update won't be reflected in any closures created before this
+      // render commits.
+      return { success: true as const, user: credential.user };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Feil verifiseringskode";
       setError(msg);
-      return { success: false };
+      return { success: false as const };
     } finally {
       setLoading(false);
     }

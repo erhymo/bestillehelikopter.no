@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { CheckCircle2, TriangleAlert } from "lucide-react";
+import type { User } from "firebase/auth";
 import { MapPicker, type MapMode } from "@/components/map/map-picker";
 import { MapToolbar } from "@/components/rfq/map-toolbar";
 import { PickupStep } from "@/components/rfq/pickup-step";
@@ -260,14 +261,20 @@ export function RfqForm() {
     return result.valid;
   }, []);
 
-  const handleSubmit = async () => {
+  // `verifiedUser`, when passed, is used straight from the just-completed
+  // OTP verification instead of `phoneAuth.user`/`phoneAuth.verified` — those
+  // come from this component's own render and are not yet updated when this
+  // is called immediately after verifying (see OtpModal's onVerified).
+  const handleSubmit = async (verifiedUser?: User) => {
     if (!canSubmit) return;
 
     // Check email before proceeding
     if (!checkEmail(customer.email)) return;
 
+    const user = verifiedUser ?? phoneAuth.user;
+
     // Require phone verification first
-    if (!phoneAuth.verified) {
+    if (!user) {
       setShowOtp(true);
       return;
     }
@@ -285,7 +292,7 @@ export function RfqForm() {
       }
 
       // Get Firebase auth token
-      const token = await phoneAuth.user?.getIdToken();
+      const token = await user.getIdToken();
 
       const body = {
         customer: {
@@ -524,7 +531,7 @@ export function RfqForm() {
           )}
 
           <Button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             loading={submitting}
             disabled={!canSubmit || submitting}
             className="w-full py-3 text-base"
@@ -537,11 +544,10 @@ export function RfqForm() {
       {/* OTP Modal */}
       <OtpModal
         open={showOtp}
-        onClose={() => {
+        onClose={() => setShowOtp(false)}
+        onVerified={(user) => {
           setShowOtp(false);
-          if (phoneAuth.verified) {
-            handleSubmit();
-          }
+          handleSubmit(user);
         }}
         phone={
           customer.phone.startsWith("+47")

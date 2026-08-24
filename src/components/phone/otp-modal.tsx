@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
+import type { User } from "firebase/auth";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,16 @@ import { Button } from "@/components/ui/button";
 interface OtpModalProps {
   open: boolean;
   onClose: () => void;
+  /** Called the moment verification succeeds — before onClose — with the
+   * freshly verified user. Callers that need to act immediately (e.g.
+   * auto-submit a form) must use this user directly rather than reading
+   * `verified`/`user` state from their own component, since that state
+   * update won't be visible in any closure created before this render
+   * commits. */
+  onVerified: (user: User) => void;
   phone: string;
   onSendOtp: (phone: string) => Promise<{ success: boolean }>;
-  onVerifyOtp: (code: string) => Promise<{ success: boolean }>;
+  onVerifyOtp: (code: string) => Promise<{ success: boolean; user?: User }>;
   loading: boolean;
   error: string | null;
   verified: boolean;
@@ -20,6 +28,7 @@ interface OtpModalProps {
 export function OtpModal({
   open,
   onClose,
+  onVerified,
   phone,
   onSendOtp,
   onVerifyOtp,
@@ -51,7 +60,8 @@ export function OtpModal({
 
   const handleVerify = async () => {
     const result = await onVerifyOtp(code);
-    if (result.success) {
+    if (result.success && result.user) {
+      onVerified(result.user);
       onClose();
     }
   };
