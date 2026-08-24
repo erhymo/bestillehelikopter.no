@@ -1,6 +1,7 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import { sendAcceptConfirmationEmail, sendOfferAcceptedEmail } from "./email";
+import { buildRegisterUrl } from "./tokens";
 
 /**
  * Trigger: Firestore onUpdate on jobs/{jobId}/offers/{offerId}
@@ -37,6 +38,7 @@ export const onOfferAccept = onDocumentUpdated(
     // totalPrice er den endelige, ev. overstyrte prisen fra steg 2 — det er
     // dette kunden faktisk aksepterte, ikke bare den systemberegnede grunnprisen.
     const price = (afterData.totalPrice as number) ?? (afterData.price as number) ?? 0;
+    const registerUrl = buildRegisterUrl(afterData.token as string);
 
     const db = admin.firestore();
 
@@ -95,6 +97,7 @@ export const onOfferAccept = onDocumentUpdated(
         price,
         offerId,
         companyId,
+        registerUrl,
       }),
     ]);
 

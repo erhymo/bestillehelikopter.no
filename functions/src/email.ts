@@ -60,6 +60,7 @@ export interface OfferAcceptedEmailData {
   price: number;
   offerId: string;
   companyId: string;
+  registerUrl: string;
 }
 
 // ── HTML builder ──────────────────────────────────────────────
@@ -199,7 +200,7 @@ export async function sendAcceptConfirmationEmail(
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="font-family:Arial,Helvetica,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:20px;background:#f9f9f9">
   <div style="background:#fff;border-radius:8px;padding:32px;border:1px solid #e5e5e5">
-    <h2 style="color:#1e3a5f;margin-top:0">Tilbud akseptert ✅</h2>
+    <h2 style="color:#1e3a5f;margin-top:0">Tilbud akseptert</h2>
     <p>Hei ${escapeHtml(data.customerName)},</p>
     <p>Du har akseptert tilbudet fra <strong>${escapeHtml(data.companyName)}</strong>.</p>
     <table style="border-collapse:collapse;width:100%;margin:16px 0">
@@ -246,7 +247,7 @@ export async function sendOfferAcceptedEmail(
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="font-family:Arial,Helvetica,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:20px;background:#f9f9f9">
   <div style="background:#fff;border-radius:8px;padding:32px;border:1px solid #e5e5e5">
-    <h2 style="color:#1e3a5f;margin-top:0">Ditt tilbud er akseptert! 🎉</h2>
+    <h2 style="color:#1e3a5f;margin-top:0">Ditt tilbud er akseptert!</h2>
     <p>Hei ${escapeHtml(data.companyName)},</p>
     <p>Kunden har akseptert tilbudet ditt på <strong>${data.price.toLocaleString("nb-NO")} NOK</strong>.</p>
     <h3 style="color:#1e3a5f;margin-top:24px">Kundeinformasjon</h3>
@@ -255,7 +256,13 @@ export async function sendOfferAcceptedEmail(
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">E-post</td><td style="padding:8px 12px;font-weight:600">${escapeHtml(data.customerEmail)}</td></tr>
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Telefon</td><td style="padding:8px 12px;font-weight:600">${escapeHtml(data.customerPhone)}</td></tr>
     </table>
-    <p>Ta kontakt med kunden for å avtale videre detaljer.</p>
+    <p>Ta kontakt med kunden for å avtale dato og tidspunkt, og registrer det under for å bekrefte oppdraget overfor kunden.</p>
+    <div style="margin:24px 0;text-align:center">
+      <a href="${escapeHtml(data.registerUrl)}"
+         style="display:inline-block;padding:14px 28px;background:#1e3a5f;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:16px">
+        Registrer
+      </a>
+    </div>
     <p style="font-size:13px;color:#888;margin-bottom:0">
       Denne e-posten er sendt fra BestilleHelikopter.no.
     </p>

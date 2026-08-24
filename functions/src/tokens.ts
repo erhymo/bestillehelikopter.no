@@ -88,3 +88,11 @@ export function buildAcceptUrl(token: string): string {
   return `${baseUrl.value()}/a/${encodeURIComponent(token)}/accept`;
 }
 
+/**
+ * Build the full "register agreed date/time" URL for a company, sent once
+ * their offer has been accepted.
+ */
+export function buildRegisterUrl(token: string): string {
+  return `${baseUrl.value()}/c/${encodeURIComponent(token)}/register`;
+}
+

@@ -213,6 +213,9 @@ export async function POST(req: NextRequest) {
       pdfRef: null,
       acceptedCompanyId: null,
       acceptedAt: null,
+      confirmedDate: null,
+      confirmedTime: null,
+      confirmedAt: null,
       createdAt: now,
       expiresAt: threeMonths,
     };

@@ -98,6 +98,9 @@ export interface Job {
   pdfRef: string | null;
   acceptedCompanyId: string | null;
   acceptedAt: Timestamp | null;
+  confirmedDate: string | null; // ISO date (YYYY-MM-DD) — avtalt med kunden, satt av selskapet
+  confirmedTime: string | null; // HH:mm — avtalt oppmøtetidspunkt
+  confirmedAt: Timestamp | null; // sist registrert/endret
   createdAt: Timestamp;
   expiresAt: Timestamp; // createdAt + 3 months
 }
@@ -165,6 +168,7 @@ export interface TrackingEvent {
 export type AnalyticsPageName =
   | "customer_form"        // /
   | "company_offer"        // /c/[token]/offer
+  | "company_register"     // /c/[token]/register
   | "customer_accept"      // /a/[token]/accept
   | "admin";               // /admin/*
 

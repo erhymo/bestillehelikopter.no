@@ -173,3 +173,12 @@ export function buildAcceptUrl(token: string): string {
   return `${base}/a/${encodeURIComponent(token)}/accept`;
 }
 
+/**
+ * Build the full "register agreed date/time" URL for a company, sent once
+ * their offer has been accepted.
+ */
+export function buildRegisterUrl(token: string): string {
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  return `${base}/c/${encodeURIComponent(token)}/register`;
+}
+
