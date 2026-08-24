@@ -19,8 +19,12 @@ const NAV_ITEMS = [
   { href: "/admin/statistikk", label: "Statistikk", icon: TrendingUp },
 ];
 
-function LoginForm() {
-  const { signInError, signIn } = useAdminAuth();
+interface LoginFormProps {
+  signInError: string | null;
+  signIn: (username: string, password: string) => Promise<void>;
+}
+
+function LoginForm({ signInError, signIn }: LoginFormProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -80,7 +84,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { loading, isAdmin, signOut } = useAdminAuth();
+  const { loading, isAdmin, signInError, signIn, signOut } = useAdminAuth();
   const pathname = usePathname();
 
   if (loading) {
@@ -92,7 +96,7 @@ export default function AdminLayout({
   }
 
   if (!isAdmin) {
-    return <LoginForm />;
+    return <LoginForm signInError={signInError} signIn={signIn} />;
   }
 
   return (
