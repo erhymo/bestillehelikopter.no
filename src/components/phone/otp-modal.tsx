@@ -57,7 +57,7 @@ export function OtpModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Verifiser telefonnummer">
+    <Modal open={open} onClose={onClose} title="Verifiser telefonnummer" variant="overlay">
       {verified ? (
         <div className="flex flex-col items-center gap-3 py-4">
           <CheckCircle2 className="h-10 w-10 text-green-600" />
