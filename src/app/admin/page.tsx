@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Mail, CheckCircle2, XCircle } from "lucide-react";
-import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 interface QuickStats {
   jobCount: number;
@@ -12,7 +11,6 @@ interface QuickStats {
 }
 
 export default function AdminPage() {
-  const { idToken } = useAdminAuth();
   const [stats, setStats] = useState<QuickStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [emailForm, setEmailForm] = useState({ to: "", subject: "", text: "" });
@@ -20,12 +18,9 @@ export default function AdminPage() {
   const [emailStatus, setEmailStatus] = useState<"success" | "error" | null>(null);
 
   const fetchQuickStats = useCallback(async () => {
-    if (!idToken) return;
     setLoading(true);
 
-    const jobsRes = await fetch("/api/admin/jobs?limit=200", {
-      headers: { Authorization: `Bearer ${idToken}` },
-    });
+    const jobsRes = await fetch("/api/admin/jobs?limit=200");
     const jobsData = await jobsRes.json();
 
     setStats({
@@ -34,7 +29,7 @@ export default function AdminPage() {
       acceptedJobs: jobsData.jobs?.filter((j: { status: string }) => j.status === "accepted").length ?? 0,
     });
     setLoading(false);
-  }, [idToken]);
+  }, []);
 
   useEffect(() => {
     // Intentional fetch-on-mount; no data-fetching library in use.
@@ -43,12 +38,11 @@ export default function AdminPage() {
   }, [fetchQuickStats]);
 
   const handleSendEmail = async () => {
-    if (!idToken) return;
     setEmailSending(true);
     setEmailStatus(null);
     const res = await fetch("/api/admin/email", {
       method: "POST",
-      headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(emailForm),
     });
     if (res.ok) {

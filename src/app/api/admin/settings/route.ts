@@ -6,7 +6,7 @@
 // single fixed-ID Company doc.
 
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyAdminToken } from "@/lib/admin-auth";
+import { verifyAdmin } from "@/lib/admin-auth";
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { RECIPIENT_COMPANY_ID } from "@/lib/recipientCompany";
@@ -17,8 +17,7 @@ function generateDashboardKey(): string {
 }
 
 export async function GET(req: NextRequest) {
-  const admin = await verifyAdminToken(req.headers.get("authorization"));
-  if (!admin) {
+  if (!verifyAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -49,8 +48,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const admin = await verifyAdminToken(req.headers.get("authorization"));
-  if (!admin) {
+  if (!verifyAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,7 +1,7 @@
 // GET /api/admin/stats — Aggregated statistics from events collection
 
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyAdminToken } from "@/lib/admin-auth";
+import { verifyAdmin } from "@/lib/admin-auth";
 import { adminDb } from "@/lib/firebase/admin";
 
 interface EventRow {
@@ -12,8 +12,7 @@ interface EventRow {
 }
 
 export async function GET(req: NextRequest) {
-  const admin = await verifyAdminToken(req.headers.get("authorization"));
-  if (!admin) {
+  if (!verifyAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

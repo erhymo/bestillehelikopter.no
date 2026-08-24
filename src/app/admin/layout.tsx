@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
@@ -18,15 +19,70 @@ const NAV_ITEMS = [
   { href: "/admin/statistikk", label: "Statistikk", icon: TrendingUp },
 ];
 
+function LoginForm() {
+  const { signInError, signIn } = useAdminAuth();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    await signIn(username, password);
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm rounded-lg bg-white p-8 shadow-lg"
+      >
+        <h1 className="mb-2 text-center text-xl font-bold text-brand-700">Admin</h1>
+        <p className="mb-6 text-center text-sm text-gray-600">Logg inn for å fortsette</p>
+
+        <div className="space-y-3">
+          <input
+            type="text"
+            autoFocus
+            placeholder="Brukernavn"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full rounded-lg border px-3 py-2 text-sm focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
+          />
+          <input
+            type="password"
+            placeholder="Passord"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-lg border px-3 py-2 text-sm focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
+          />
+        </div>
+
+        {signInError && (
+          <p className="mt-3 text-sm text-red-600">{signInError}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={submitting || !username || !password}
+          className="mt-4 w-full rounded-lg bg-brand-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {submitting ? "Logger inn..." : "Logg inn"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, isAdmin, signInError, signIn, signOut } = useAdminAuth();
+  const { loading, isAdmin, signOut } = useAdminAuth();
   const pathname = usePathname();
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
@@ -35,48 +91,10 @@ export default function AdminLayout({
     );
   }
 
-  // Not signed in
-  if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <div className="w-full max-w-sm rounded-lg bg-white p-8 text-center shadow-lg">
-          <h1 className="mb-2 text-xl font-bold text-brand-700">Admin</h1>
-          <p className="mb-6 text-sm text-gray-600">Logg inn for å fortsette</p>
-          {signInError && (
-            <p className="mb-4 text-sm text-red-600">{signInError}</p>
-          )}
-          <button
-            onClick={signIn}
-            className="w-full rounded-lg bg-brand-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
-          >
-            Logg inn med Google
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Signed in but not admin
   if (!isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <div className="w-full max-w-sm rounded-lg bg-white p-8 text-center shadow-lg">
-          <h1 className="mb-2 text-xl font-bold text-red-600">Ingen tilgang</h1>
-          <p className="mb-4 text-sm text-gray-600">
-            {user.email} har ikke admin-rettigheter.
-          </p>
-          <button
-            onClick={signOut}
-            className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
-          >
-            Logg ut
-          </button>
-        </div>
-      </div>
-    );
+    return <LoginForm />;
   }
 
-  // Admin UI
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -107,7 +125,6 @@ export default function AdminLayout({
           })}
         </nav>
         <div className="mt-auto border-t border-gray-200 p-3">
-          <p className="mb-1 truncate text-xs text-gray-600">{user.email}</p>
           <button
             onClick={signOut}
             className="w-full rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
@@ -122,4 +139,3 @@ export default function AdminLayout({
     </div>
   );
 }
-

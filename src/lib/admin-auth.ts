@@ -1,24 +1,11 @@
 import "server-only";
 
-import { adminAuth } from "@/lib/firebase/admin";
+import type { NextRequest } from "next/server";
+import { verifyAdminSession, ADMIN_SESSION_COOKIE } from "@/lib/admin-session";
 
 /**
- * Verify admin Authorization header.
- * Expects: Authorization: Bearer <Firebase ID token>
- * Returns the decoded token if valid admin, null otherwise.
+ * Verify the admin_session cookie on an incoming API request.
  */
-export async function verifyAdminToken(
-  authHeader: string | null,
-): Promise<{ uid: string; email?: string } | null> {
-  if (!authHeader?.startsWith("Bearer ")) return null;
-
-  const idToken = authHeader.slice(7);
-  try {
-    const decoded = await adminAuth.verifyIdToken(idToken);
-    if (decoded.admin !== true) return null;
-    return { uid: decoded.uid, email: decoded.email };
-  } catch {
-    return null;
-  }
+export function verifyAdmin(req: NextRequest): boolean {
+  return verifyAdminSession(req.cookies.get(ADMIN_SESSION_COOKIE)?.value);
 }
-

@@ -1,82 +1,61 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import {
-  onAuthStateChanged,
-  signInWithPopup,
-  GoogleAuthProvider,
-  signOut as firebaseSignOut,
-  type User,
-} from "firebase/auth";
-import { auth } from "@/lib/firebase/client";
+import { useState, useCallback, useEffect } from "react";
 
 interface AdminAuthState {
-  user: User | null;
   loading: boolean;
   isAdmin: boolean;
-  idToken: string | null;
   signInError: string | null;
-  signIn: () => Promise<void>;
+  signIn: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
-const googleProvider = new GoogleAuthProvider();
-
 export function useAdminAuth(): AdminAuthState {
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [idToken, setIdToken] = useState<string | null>(null);
   const [signInError, setSignInError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        // Get ID token and check custom claims
-        const tokenResult = await firebaseUser.getIdTokenResult(true);
-        const adminClaim = tokenResult.claims.admin === true;
-        setIsAdmin(adminClaim);
-        setIdToken(tokenResult.token);
-      } else {
-        setUser(null);
-        setIsAdmin(false);
-        setIdToken(null);
-      }
+  const checkSession = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/session");
+      const data = await res.json();
+      setIsAdmin(!!data.authenticated);
+    } catch {
+      setIsAdmin(false);
+    } finally {
       setLoading(false);
-    });
-    return () => unsub();
+    }
   }, []);
 
-  const signIn = useCallback(async () => {
+  useEffect(() => {
+    // Intentional fetch-on-mount; checks the admin_session cookie server-side.
+    checkSession();
+  }, [checkSession]);
+
+  const signIn = useCallback(async (username: string, password: string) => {
     setSignInError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err) {
-      console.error("[admin-auth] Sign-in failed:", err);
-      const code = (err as { code?: string })?.code;
-      if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-        // User closed the popup themselves — not an error worth surfacing.
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setSignInError(data.error ?? "Innlogging feilet. Prøv igjen.");
         return;
       }
-      if (code === "auth/popup-blocked") {
-        setSignInError(
-          "Nettleseren blokkerte innloggingsvinduet. Tillat popup-vinduer for denne siden og prøv igjen.",
-        );
-      } else if (code === "auth/unauthorized-domain") {
-        setSignInError(
-          `Dette domenet (${window.location.hostname}) er ikke godkjent for innlogging. Kontakt utvikler for å legge det til i Firebase.`,
-        );
-      } else {
-        setSignInError(`Innlogging feilet (${code ?? "ukjent feil"}). Prøv igjen.`);
-      }
+      setIsAdmin(true);
+    } catch {
+      setSignInError("Innlogging feilet. Prøv igjen.");
     }
   }, []);
 
   const signOut = useCallback(async () => {
-    await firebaseSignOut(auth);
+    await fetch("/api/admin/logout", { method: "POST" });
+    setIsAdmin(false);
   }, []);
 
-  return { user, loading, isAdmin, idToken, signInError, signIn, signOut };
+  return { loading, isAdmin, signInError, signIn, signOut };
 }
-

@@ -269,7 +269,7 @@ Kjør etter hver produksjons-deploy.
 
 ### 6g. Admin
 
-- [ ] `/admin` → Google sign-in fungerer (krever custom claim `admin: true`)
+- [ ] `/admin` → innlogging med brukernavn/passord fungerer (`ADMIN_USERNAME`/`ADMIN_PASSWORD` env vars)
 - [ ] Jobber-oversikt viser submitted jobs
 - [ ] Selskaper-liste viser registrerte selskaper
 - [ ] Statistikk-side laster data

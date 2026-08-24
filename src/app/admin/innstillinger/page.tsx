@@ -2,10 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Copy, Check } from "lucide-react";
-import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 export default function AdminInnstillingerPage() {
-  const { idToken } = useAdminAuth();
   const [email, setEmail] = useState("");
   const [dashboardKey, setDashboardKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -15,18 +13,15 @@ export default function AdminInnstillingerPage() {
   const [copied, setCopied] = useState(false);
 
   const fetchSettings = useCallback(async () => {
-    if (!idToken) return;
     setLoading(true);
-    const res = await fetch("/api/admin/settings", {
-      headers: { Authorization: `Bearer ${idToken}` },
-    });
+    const res = await fetch("/api/admin/settings");
     const data = await res.json();
     if (data.ok && data.company) {
       setEmail(data.company.email ?? "");
       setDashboardKey(data.company.dashboardKey ?? null);
     }
     setLoading(false);
-  }, [idToken]);
+  }, []);
 
   useEffect(() => {
     // Intentional fetch-on-mount; no data-fetching library in use.
@@ -35,12 +30,11 @@ export default function AdminInnstillingerPage() {
   }, [fetchSettings]);
 
   const handleSave = async () => {
-    if (!idToken) return;
     setSaving(true);
     setSaved(false);
     await fetch("/api/admin/settings", {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
     setSaving(false);
@@ -48,7 +42,6 @@ export default function AdminInnstillingerPage() {
   };
 
   const handleRegenerateKey = async () => {
-    if (!idToken) return;
     if (
       dashboardKey &&
       !window.confirm(
@@ -60,7 +53,7 @@ export default function AdminInnstillingerPage() {
     setRegenerating(true);
     const res = await fetch("/api/admin/settings", {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ regenerateDashboardKey: true }),
     });
     const data = await res.json();

@@ -1,15 +1,14 @@
 // POST /api/admin/email — Send email to customer from admin
 
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyAdminToken } from "@/lib/admin-auth";
+import { verifyAdmin } from "@/lib/admin-auth";
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY ?? "";
 const FROM_EMAIL = process.env.FROM_EMAIL ?? "noreply@bestillehelikopter.no";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@bestillehelikopter.no";
 
 export async function POST(req: NextRequest) {
-  const admin = await verifyAdminToken(req.headers.get("authorization"));
-  if (!admin) {
+  if (!verifyAdmin(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

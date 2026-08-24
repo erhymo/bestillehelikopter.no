@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { BarChart3, TrendingUp } from "lucide-react";
-import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { MiniBarChart, MiniLineChart } from "@/components/admin/mini-chart";
 
 const MONTH_SHORT = ["jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"];
@@ -50,7 +49,6 @@ interface TodayAnalytics {
 }
 
 export function StatsCharts() {
-  const { idToken } = useAdminAuth();
   const [totals, setTotals] = useState<Totals | null>(null);
   const [monthly, setMonthly] = useState<MonthRow[]>([]);
   const [companyStats, setCompanyStats] = useState<CompanyStatRow[]>([]);
@@ -59,11 +57,8 @@ export function StatsCharts() {
   const [loading, setLoading] = useState(true);
 
   const fetchStats = useCallback(async () => {
-    if (!idToken) return;
     setLoading(true);
-    const res = await fetch("/api/admin/stats", {
-      headers: { Authorization: `Bearer ${idToken}` },
-    });
+    const res = await fetch("/api/admin/stats");
     const data = await res.json();
     if (data.ok) {
       setTotals(data.totals);
@@ -73,7 +68,7 @@ export function StatsCharts() {
       setTodayAnalytics(data.todayAnalytics ?? null);
     }
     setLoading(false);
-  }, [idToken]);
+  }, []);
 
   useEffect(() => {
     // Intentional fetch-on-mount; no data-fetching library in use.

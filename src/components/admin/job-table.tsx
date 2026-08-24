@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Mail, MousePointerClick } from "lucide-react";
-import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 interface OfferRow {
   id: string;
@@ -40,24 +39,20 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export function JobTable() {
-  const { idToken } = useAdminAuth();
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   const fetchJobs = useCallback(async () => {
-    if (!idToken) return;
     setLoading(true);
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
-    const res = await fetch(`/api/admin/jobs?${params}`, {
-      headers: { Authorization: `Bearer ${idToken}` },
-    });
+    const res = await fetch(`/api/admin/jobs?${params}`);
     const data = await res.json();
     if (data.ok) setJobs(data.jobs);
     setLoading(false);
-  }, [idToken, statusFilter]);
+  }, [statusFilter]);
 
   useEffect(() => {
     // Intentional fetch-on-mount/filter-change; no data-fetching library in use.
