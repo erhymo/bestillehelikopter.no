@@ -6,14 +6,15 @@ import { useAnalytics } from "@/hooks/use-analytics";
 
 interface AcceptButtonProps {
   token: string;
+  companyName?: string;
 }
 
-export function AcceptButton({ token }: AcceptButtonProps) {
+export function AcceptButton({ token, companyName }: AcceptButtonProps) {
   const [submitting, setSubmitting] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
   const { trackFunnel } = useAnalytics("customer_accept");
+  const company = companyName || "Selskapet";
 
   async function handleAccept() {
     setError(null);
@@ -38,7 +39,6 @@ export function AcceptButton({ token }: AcceptButtonProps) {
       setError("Kunne ikke akseptere tilbudet. Prøv igjen.");
     } finally {
       setSubmitting(false);
-      setShowConfirm(false);
     }
   }
 
@@ -50,8 +50,9 @@ export function AcceptButton({ token }: AcceptButtonProps) {
           Tilbudet er akseptert!
         </h2>
         <p className="text-sm text-green-700">
-          Selskapet har fått beskjed og vil kontakte deg for å avtale videre
-          detaljer. Du vil også motta en bekreftelse på e-post.
+          {company} har fått beskjed, og kommer tilbake til deg med forslag
+          til tidspunkt for gjennomføring av oppdraget. Du vil også motta en
+          bekreftelse på e-post.
         </p>
       </div>
     );
@@ -65,37 +66,13 @@ export function AcceptButton({ token }: AcceptButtonProps) {
         </div>
       )}
 
-      {!showConfirm ? (
-        <button
-          onClick={() => setShowConfirm(true)}
-          className="w-full rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700"
-        >
-          Aksepter tilbud
-        </button>
-      ) : (
-        <div className="space-y-3">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <strong>Er du sikker?</strong> Når du aksepterer blir oppdraget
-            tildelt, og det kan ikke angres.
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowConfirm(false)}
-              disabled={submitting}
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
-            >
-              Avbryt
-            </button>
-            <button
-              onClick={handleAccept}
-              disabled={submitting}
-              className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {submitting ? "Aksepterer…" : "Ja, aksepter"}
-            </button>
-          </div>
-        </div>
-      )}
+      <button
+        onClick={handleAccept}
+        disabled={submitting}
+        className="w-full rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {submitting ? "Aksepterer…" : "Aksepter tilbud"}
+      </button>
 
       <p className="mt-4 text-center text-xs text-gray-600">
         Ved å akseptere gir du selskapet tilgang til din kontaktinformasjon.

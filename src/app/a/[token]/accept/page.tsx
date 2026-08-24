@@ -132,7 +132,7 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
         flightCost={offerData.price ?? 0}
         addons={addons}
         totalPrice={grandTotal}
-        actionSlot={<AcceptButton token={token} />}
+        actionSlot={<AcceptButton token={token} companyName={companyName} />}
       />
     </TokenPageLayout>
   );
