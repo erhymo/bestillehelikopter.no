@@ -186,10 +186,6 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
               </span>
             </div>
             <div className="flex justify-between sm:block">
-              <span className="text-gray-600">Antall dropp</span>
-              <span className="ml-2 font-medium sm:ml-0 sm:block">{job.drops.length}</span>
-            </div>
-            <div className="flex justify-between sm:block">
               <span className="text-gray-600">Est. flytid</span>
               <span className="ml-2 font-medium sm:ml-0 sm:block">
                 {Math.ceil(job.totalFlightTimeMin)} min
@@ -201,6 +197,12 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
               </span>
               <span className="ml-2 font-medium sm:ml-0 sm:block">{job.totalHiveCount}</span>
             </div>
+            {job.drops.length > 1 && (
+              <div className="flex justify-between sm:block">
+                <span className="text-gray-600">Merk</span>
+                <span className="ml-2 font-medium sm:ml-0 sm:block">Flere dropp-punkter</span>
+              </div>
+            )}
             {job.notes && (
               <div className="sm:col-span-2">
                 <span className="text-gray-600">Kommentar fra kunden</span>
