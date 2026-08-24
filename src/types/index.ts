@@ -140,7 +140,8 @@ export interface Company {
   _v: number;
   id?: string;
   name: string;
-  email: string; // eneste felt admin kan redigere
+  email: string; // admin kan redigere
+  dashboardKey: string | null; // hemmelig nøkkel for /oversikt/[key] — admin kan regenerere
   createdAt: Timestamp;
 }
 
@@ -169,6 +170,7 @@ export type AnalyticsPageName =
   | "customer_form"        // /
   | "company_offer"        // /c/[token]/offer
   | "company_register"     // /c/[token]/register
+  | "company_overview"     // /oversikt/[key]
   | "customer_accept"      // /a/[token]/accept
   | "admin";               // /admin/*
 
