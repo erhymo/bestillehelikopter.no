@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { CheckCircle2, TriangleAlert } from "lucide-react";
 import type { User } from "firebase/auth";
 import { MapPicker, type MapMode } from "@/components/map/map-picker";
@@ -8,7 +8,7 @@ import { MapToolbar } from "@/components/rfq/map-toolbar";
 import { PickupStep } from "@/components/rfq/pickup-step";
 import { TransportTypeToggle } from "@/components/rfq/transport-type-toggle";
 import { DropsStep } from "@/components/rfq/drops-step";
-import { CustomerInfoStep } from "@/components/rfq/customer-info-step";
+import { CustomerInfoStep, type CustomerInfoStepHandle } from "@/components/rfq/customer-info-step";
 import { FlightSummary } from "@/components/rfq/flight-summary";
 import { ImageUpload } from "@/components/rfq/image-upload";
 import { OtpModal } from "@/components/phone/otp-modal";
@@ -60,8 +60,7 @@ export function RfqForm() {
   const [coordinateError, setCoordinateError] = useState<string | null>(null);
   const [showCoordinateModal, setShowCoordinateModal] = useState(false);
   const [customer, setCustomer] = useState<CustomerData>(emptyCustomer);
-  const [desiredDate, setDesiredDate] = useState("");
-  const [desiredTime, setDesiredTime] = useState("");
+  const customerInfoRef = useRef<CustomerInfoStepHandle>(null);
   const [flexibleDate, setFlexibleDate] = useState(false);
   const [notes, setNotes] = useState("");
   const [showOtp, setShowOtp] = useState(false);
@@ -190,8 +189,7 @@ export function RfqForm() {
     setCoordinateInput("");
     setCoordinateError(null);
     setCustomer(emptyCustomer);
-    setDesiredDate("");
-    setDesiredTime("");
+    customerInfoRef.current?.resetDesiredDateTime();
     setFlexibleDate(false);
     setNotes("");
     setSubmitError(null);
@@ -295,6 +293,9 @@ export function RfqForm() {
 
       // Get Firebase auth token
       const token = await user.getIdToken();
+
+      const { desiredDate, desiredTime } =
+        customerInfoRef.current?.getDesiredDateTime() ?? { desiredDate: "", desiredTime: "" };
 
       const body = {
         customer: {
@@ -458,12 +459,9 @@ export function RfqForm() {
         />
 
         <CustomerInfoStep
+          ref={customerInfoRef}
           data={customer}
           onChange={setCustomer}
-          desiredDate={desiredDate}
-          onDesiredDateChange={setDesiredDate}
-          desiredTime={desiredTime}
-          onDesiredTimeChange={setDesiredTime}
           flexibleDate={flexibleDate}
           onFlexibleDateChange={setFlexibleDate}
           notes={notes}

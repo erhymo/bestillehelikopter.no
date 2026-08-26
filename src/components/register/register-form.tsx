@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CheckCircle2, TriangleAlert } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 interface RegisterFormProps {
   token: string;
@@ -146,22 +146,11 @@ export function RegisterForm({
 
       {/* Always-accurate summary of what will actually be submitted —
           independent of whatever the native widgets happen to display. */}
-      {!saved && (
-        <div
-          className={`flex items-start gap-2 rounded-lg border px-4 py-3 text-sm ${
-            previewDate && previewTime
-              ? "border-brand-100 bg-brand-50 text-brand-900"
-              : "border-amber-200 bg-amber-50 text-amber-800"
-          }`}
-        >
-          {!(previewDate && previewTime) && <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />}
-          <span>
-            <strong>Registrerer:</strong>{" "}
-            {previewDate && previewTime
-              ? `${formatDateNorwegian(previewDate)} kl. ${previewTime}`
-              : "Ingen dato/tidspunkt valgt ennå — klikk i feltene over og velg."}
-          </span>
-        </div>
+      {!saved && previewDate && previewTime && (
+        <p className="text-sm text-gray-600">
+          <strong className="text-gray-900">Registrerer:</strong>{" "}
+          {formatDateNorwegian(previewDate)} kl. {previewTime}
+        </p>
       )}
 
       {error && (
