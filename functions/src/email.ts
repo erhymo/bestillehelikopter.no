@@ -30,6 +30,7 @@ export interface RfqEmailData {
   transportType: "sling" | "passenger";
   totalFlightTimeMin: number;
   desiredDate: string;
+  desiredTime: string;
   flexibleDate: boolean;
   pdfBase64: string | null; // null = no attachment
 }
@@ -76,6 +77,7 @@ function escapeHtml(str: string): string {
 export function buildRfqEmailHtml(data: RfqEmailData): string {
   const dateStr = data.desiredDate
     ? escapeHtml(data.desiredDate) +
+      (data.desiredTime ? ` kl. ${escapeHtml(data.desiredTime)}` : "") +
       (data.flexibleDate ? " (fleksibel)" : "")
     : "Ikke spesifisert";
 

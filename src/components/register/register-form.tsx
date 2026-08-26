@@ -7,9 +7,10 @@ interface RegisterFormProps {
   token: string;
   initialDate: string | null;
   initialTime: string | null;
-  /** Kundens opprinnelig ønskede dato fra forespørselen — brukes som
-   * forhåndsutfylt forslag når Airlift ikke har registrert noe ennå. */
+  /** Kundens opprinnelig ønskede dato/tidspunkt fra forespørselen — brukes
+   * som forhåndsutfylt forslag når Airlift ikke har registrert noe ennå. */
   suggestedDate: string | null;
+  suggestedTime: string | null;
   flexibleDate: boolean;
 }
 
@@ -18,6 +19,7 @@ export function RegisterForm({
   initialDate,
   initialTime,
   suggestedDate,
+  suggestedTime,
   flexibleDate,
 }: RegisterFormProps) {
   // Uncontrolled on purpose: native date/time inputs are known to drift out
@@ -32,6 +34,7 @@ export function RegisterForm({
   const [error, setError] = useState<string | null>(null);
   const alreadyRegistered = !!initialDate;
   const defaultDate = initialDate ?? suggestedDate ?? "";
+  const defaultTime = initialTime ?? suggestedTime ?? "";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -81,11 +84,15 @@ export function RegisterForm({
         </p>
       )}
 
-      {!saved && !alreadyRegistered && suggestedDate && (
+      {!saved && !alreadyRegistered && (suggestedDate || suggestedTime) && (
         <p className="text-sm text-gray-600">
-          Datoen er forhåndsutfylt med kundens ønskede dato
-          {flexibleDate ? " (kunden er fleksibel på dato)" : ""}. Endre den til det dere faktisk
-          ble enige om.
+          {suggestedDate && suggestedTime
+            ? "Dato og klokkeslett er forhåndsutfylt med det kunden ønsket"
+            : suggestedDate
+              ? "Datoen er forhåndsutfylt med kundens ønskede dato"
+              : "Klokkeslettet er forhåndsutfylt med kundens ønskede tidspunkt"}
+          {flexibleDate ? " (kunden er fleksibel på dato)" : ""}. Endre til det dere faktisk ble
+          enige om.
         </p>
       )}
 
@@ -109,7 +116,7 @@ export function RegisterForm({
           <input
             ref={timeRef}
             type="time"
-            defaultValue={initialTime ?? ""}
+            defaultValue={defaultTime}
             onChange={() => setSaved(false)}
             className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
           />

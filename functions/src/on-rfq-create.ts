@@ -17,6 +17,7 @@ interface JobCustomer {
 interface JobData {
   customer: JobCustomer;
   desiredDate: string;
+  desiredTime: string;
   flexibleDate: boolean;
   totalFlightTimeMin: number;
   transportType: "sling" | "passenger";
@@ -125,6 +126,7 @@ export const onRfqCreate = onDocumentCreated(
       transportType: job.transportType,
       totalFlightTimeMin: job.totalFlightTimeMin,
       desiredDate: job.desiredDate,
+      desiredTime: job.desiredTime,
       flexibleDate: job.flexibleDate,
       pdfBase64,
     });

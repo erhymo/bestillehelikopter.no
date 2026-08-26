@@ -60,6 +60,7 @@ interface JobData {
   estimates: FlightEstimate[];
   totalFlightTimeMin: number;
   desiredDate: string;
+  desiredTime: string;
   flexibleDate: boolean;
   notes: string;
   imageRefs: string[];
@@ -367,6 +368,7 @@ export async function generateJobPdf(jobId: string): Promise<PdfResult> {
   // 3. Job details
   w.drawHeader("Oppdragsdetaljer", 12);
   w.drawField("Ønsket dato", job.desiredDate || "Ikke spesifisert");
+  if (job.desiredTime) w.drawField("Ønsket tidspunkt", job.desiredTime);
   w.drawField("Fleksibel dato", job.flexibleDate ? "Ja" : "Nei");
   if (job.notes) {
     w.drawField("Kommentarer", "");

@@ -12,6 +12,7 @@ interface JobRow {
   id: string;
   customerName: string;
   desiredDate: string;
+  desiredTime: string;
   flexibleDate: boolean;
   hiveOrPax: number;
   transportType: "sling" | "passenger";
@@ -109,6 +110,7 @@ export default async function OverviewPage({ params }: PageProps) {
         id: doc.id,
         customerName: d.customer?.name ?? "Ukjent",
         desiredDate: d.desiredDate ?? "",
+        desiredTime: d.desiredTime ?? "",
         flexibleDate: !!d.flexibleDate,
         hiveOrPax,
         transportType,
@@ -152,6 +154,7 @@ export default async function OverviewPage({ params }: PageProps) {
                   <span className="font-semibold text-gray-900">{job.customerName}</span>
                   <span className="text-sm text-gray-500">
                     {job.desiredDate || "Ikke spesifisert"}
+                    {job.desiredTime ? ` kl. ${job.desiredTime}` : ""}
                     {job.flexibleDate ? " (fleksibel)" : ""}
                   </span>
                 </div>

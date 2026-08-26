@@ -86,6 +86,7 @@ export default async function RegisterPage({ params }: PageProps) {
           initialDate={jobData.confirmedDate ?? null}
           initialTime={jobData.confirmedTime ?? null}
           suggestedDate={jobData.desiredDate || null}
+          suggestedTime={jobData.desiredTime || null}
           flexibleDate={!!jobData.flexibleDate}
         />
       </div>

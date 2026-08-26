@@ -22,6 +22,7 @@ interface WizardJob {
   drops: WizardDrop[];
   transportType: "sling" | "passenger";
   desiredDate: string;
+  desiredTime: string;
   flexibleDate: boolean;
   notes: string;
   totalFlightTimeMin: number;
@@ -182,6 +183,7 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
               <span className="text-gray-600">Ønsket dato</span>
               <span className="ml-2 font-medium sm:ml-0 sm:block">
                 {job.desiredDate || "Ikke spesifisert"}
+                {job.desiredTime ? ` kl. ${job.desiredTime}` : ""}
                 {job.flexibleDate ? " (fleksibel)" : ""}
               </span>
             </div>

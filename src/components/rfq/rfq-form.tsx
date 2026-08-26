@@ -61,6 +61,7 @@ export function RfqForm() {
   const [showCoordinateModal, setShowCoordinateModal] = useState(false);
   const [customer, setCustomer] = useState<CustomerData>(emptyCustomer);
   const [desiredDate, setDesiredDate] = useState("");
+  const [desiredTime, setDesiredTime] = useState("");
   const [flexibleDate, setFlexibleDate] = useState(false);
   const [notes, setNotes] = useState("");
   const [showOtp, setShowOtp] = useState(false);
@@ -190,6 +191,7 @@ export function RfqForm() {
     setCoordinateError(null);
     setCustomer(emptyCustomer);
     setDesiredDate("");
+    setDesiredTime("");
     setFlexibleDate(false);
     setNotes("");
     setSubmitError(null);
@@ -315,6 +317,7 @@ export function RfqForm() {
         })),
         transportType,
         desiredDate,
+        desiredTime,
         flexibleDate,
         notes: notes.trim(),
         imageRefs,
@@ -459,6 +462,8 @@ export function RfqForm() {
           onChange={setCustomer}
           desiredDate={desiredDate}
           onDesiredDateChange={setDesiredDate}
+          desiredTime={desiredTime}
+          onDesiredTimeChange={setDesiredTime}
           flexibleDate={flexibleDate}
           onFlexibleDateChange={setFlexibleDate}
           notes={notes}

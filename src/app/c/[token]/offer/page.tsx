@@ -164,6 +164,7 @@ export default async function CompanyOfferPage({ params }: PageProps) {
             })),
             transportType,
             desiredDate: jobData.desiredDate ?? "",
+            desiredTime: jobData.desiredTime ?? "",
             flexibleDate: !!jobData.flexibleDate,
             notes: jobData.notes ?? "",
             totalFlightTimeMin: jobData.totalFlightTimeMin ?? 0,

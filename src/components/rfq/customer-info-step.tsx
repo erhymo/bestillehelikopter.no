@@ -16,6 +16,8 @@ interface CustomerInfoStepProps {
   onChange: (data: CustomerInfo) => void;
   desiredDate: string;
   onDesiredDateChange: (v: string) => void;
+  desiredTime: string;
+  onDesiredTimeChange: (v: string) => void;
   flexibleDate: boolean;
   onFlexibleDateChange: (v: boolean) => void;
   notes: string;
@@ -29,6 +31,8 @@ export function CustomerInfoStep({
   onChange,
   desiredDate,
   onDesiredDateChange,
+  desiredTime,
+  onDesiredTimeChange,
   flexibleDate,
   onFlexibleDateChange,
   notes,
@@ -87,7 +91,7 @@ export function CustomerInfoStep({
         />
       </div>
 
-      {/* Date */}
+      {/* Date & time */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
           label="Ønsket dato"
@@ -95,16 +99,23 @@ export function CustomerInfoStep({
           value={desiredDate}
           onChange={(e) => onDesiredDateChange(e.target.value)}
         />
-        <label className="flex items-center gap-2 self-end py-2">
-          <input
-            type="checkbox"
-            checked={flexibleDate}
-            onChange={(e) => onFlexibleDateChange(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600"
-          />
-          <span className="text-sm text-gray-700">Fleksibel på dato</span>
-        </label>
+        <Input
+          label="Ønsket tidspunkt"
+          type="time"
+          value={desiredTime}
+          onChange={(e) => onDesiredTimeChange(e.target.value)}
+          placeholder="Valgfritt"
+        />
       </div>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={flexibleDate}
+          onChange={(e) => onFlexibleDateChange(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-blue-600"
+        />
+        <span className="text-sm text-gray-700">Fleksibel på dato</span>
+      </label>
 
       {/* Notes */}
       <div className="space-y-1">
@@ -120,7 +131,7 @@ export function CustomerInfoStep({
           onChange={(e) => onNotesChange(e.target.value)}
           rows={3}
           className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-          placeholder="Spesielle behov, tidspunkt, tilgjengelighet på stedet…"
+          placeholder="Spesielle behov, tilgjengelighet på stedet…"
         />
       </div>
     </div>

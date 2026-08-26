@@ -49,6 +49,7 @@ const RfqPayloadSchema = z.object({
     .min(1, "Minst ett leveringspunkt kreves")
     .max(26, "Maks 26 leveringspunkter"),
   desiredDate: z.string().default(""),
+  desiredTime: z.string().default(""),
   flexibleDate: z.boolean().default(false),
   notes: z.string().max(2000).default(""),
   imageRefs: z.array(z.string()).max(5).default([]),
@@ -102,6 +103,7 @@ export async function POST(req: NextRequest) {
       pickup,
       drops,
       desiredDate,
+      desiredTime,
       flexibleDate,
       notes,
       imageRefs,
@@ -204,6 +206,7 @@ export async function POST(req: NextRequest) {
       drops: dropsWithElev,
       transportType,
       desiredDate,
+      desiredTime,
       flexibleDate,
       notes: notes.trim(),
       companyId: RECIPIENT_COMPANY_ID,

@@ -89,6 +89,7 @@ export interface Job {
   drops: Drop[];
   transportType: TransportType;
   desiredDate: string; // ISO date string (YYYY-MM-DD) eller ""
+  desiredTime: string; // HH:mm eller "" — valgfritt ønsket tidspunkt fra kunden
   flexibleDate: boolean; // "Fleksibel på dato"
   notes: string; // fritekst-kommentarer fra kunden
   companyId: string; // fast mottaker (kunden velger ikke selv)
@@ -257,6 +258,7 @@ export interface CreateRfqInput {
   drops: Array<Omit<Drop, "elevation">>; // elevation fetched server-side
   transportType: TransportType;
   desiredDate: string;
+  desiredTime: string;
   flexibleDate: boolean;
   notes: string;
   imageRefs: string[]; // already uploaded Storage paths
