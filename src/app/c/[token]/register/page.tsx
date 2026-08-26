@@ -85,6 +85,8 @@ export default async function RegisterPage({ params }: PageProps) {
           token={token}
           initialDate={jobData.confirmedDate ?? null}
           initialTime={jobData.confirmedTime ?? null}
+          suggestedDate={jobData.desiredDate || null}
+          flexibleDate={!!jobData.flexibleDate}
         />
       </div>
     </TokenPageLayout>

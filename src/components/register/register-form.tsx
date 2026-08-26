@@ -7,9 +7,19 @@ interface RegisterFormProps {
   token: string;
   initialDate: string | null;
   initialTime: string | null;
+  /** Kundens opprinnelig ønskede dato fra forespørselen — brukes som
+   * forhåndsutfylt forslag når Airlift ikke har registrert noe ennå. */
+  suggestedDate: string | null;
+  flexibleDate: boolean;
 }
 
-export function RegisterForm({ token, initialDate, initialTime }: RegisterFormProps) {
+export function RegisterForm({
+  token,
+  initialDate,
+  initialTime,
+  suggestedDate,
+  flexibleDate,
+}: RegisterFormProps) {
   // Uncontrolled on purpose: native date/time inputs are known to drift out
   // of sync with a React-controlled `value` (the widget shows a complete
   // value while onChange never delivered it to state), which silently
@@ -21,6 +31,7 @@ export function RegisterForm({ token, initialDate, initialTime }: RegisterFormPr
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const alreadyRegistered = !!initialDate;
+  const defaultDate = initialDate ?? suggestedDate ?? "";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,6 +81,14 @@ export function RegisterForm({ token, initialDate, initialTime }: RegisterFormPr
         </p>
       )}
 
+      {!saved && !alreadyRegistered && suggestedDate && (
+        <p className="text-sm text-gray-600">
+          Datoen er forhåndsutfylt med kundens ønskede dato
+          {flexibleDate ? " (kunden er fleksibel på dato)" : ""}. Endre den til det dere faktisk
+          ble enige om.
+        </p>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="mb-1 block text-sm font-semibold text-gray-700">
@@ -78,7 +97,7 @@ export function RegisterForm({ token, initialDate, initialTime }: RegisterFormPr
           <input
             ref={dateRef}
             type="date"
-            defaultValue={initialDate ?? ""}
+            defaultValue={defaultDate}
             onChange={() => setSaved(false)}
             className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
           />
