@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 
 interface RegisterFormProps {
@@ -10,8 +10,13 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ token, initialDate, initialTime }: RegisterFormProps) {
-  const [date, setDate] = useState(initialDate ?? "");
-  const [time, setTime] = useState(initialTime ?? "");
+  // Uncontrolled on purpose: native date/time inputs are known to drift out
+  // of sync with a React-controlled `value` (the widget shows a complete
+  // value while onChange never delivered it to state), which silently
+  // blocked submission. Reading straight from the DOM at submit time
+  // sidesteps that entirely.
+  const dateRef = useRef<HTMLInputElement>(null);
+  const timeRef = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +25,9 @@ export function RegisterForm({ token, initialDate, initialTime }: RegisterFormPr
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    const date = dateRef.current?.value ?? "";
+    const time = timeRef.current?.value ?? "";
 
     if (!date || !time) {
       setError("Fyll ut både dato og klokkeslett");
@@ -68,12 +76,10 @@ export function RegisterForm({ token, initialDate, initialTime }: RegisterFormPr
             Dato <span className="text-red-500">*</span>
           </label>
           <input
+            ref={dateRef}
             type="date"
-            value={date}
-            onChange={(e) => {
-              setDate(e.target.value);
-              setSaved(false);
-            }}
+            defaultValue={initialDate ?? ""}
+            onChange={() => setSaved(false)}
             className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
           />
         </div>
@@ -82,12 +88,10 @@ export function RegisterForm({ token, initialDate, initialTime }: RegisterFormPr
             Klokkeslett <span className="text-red-500">*</span>
           </label>
           <input
+            ref={timeRef}
             type="time"
-            value={time}
-            onChange={(e) => {
-              setTime(e.target.value);
-              setSaved(false);
-            }}
+            defaultValue={initialTime ?? ""}
+            onChange={() => setSaved(false)}
             className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
           />
         </div>
