@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, TriangleAlert } from "lucide-react";
 
 interface RegisterFormProps {
   token: string;
@@ -12,6 +12,12 @@ interface RegisterFormProps {
   suggestedDate: string | null;
   suggestedTime: string | null;
   flexibleDate: boolean;
+}
+
+function formatDateNorwegian(isoDate: string): string {
+  const date = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return isoDate;
+  return date.toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" });
 }
 
 export function RegisterForm({
@@ -36,6 +42,21 @@ export function RegisterForm({
   const defaultDate = initialDate ?? suggestedDate ?? "";
   const defaultTime = initialTime ?? suggestedTime ?? "";
 
+  // Browsers — Safari in particular — can render an *empty* date/time
+  // input as if it already shows today's date / the current time, even
+  // though the real underlying value is still "". That reliably fools
+  // people into thinking the field is filled in when it isn't. This
+  // preview mirrors the actual DOM value (not what the widget merely
+  // displays) so what gets submitted is never ambiguous.
+  const [previewDate, setPreviewDate] = useState(defaultDate);
+  const [previewTime, setPreviewTime] = useState(defaultTime);
+
+  function syncPreview() {
+    setPreviewDate(dateRef.current?.value ?? "");
+    setPreviewTime(timeRef.current?.value ?? "");
+    setSaved(false);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -44,7 +65,7 @@ export function RegisterForm({
     const time = timeRef.current?.value ?? "";
 
     if (!date || !time) {
-      setError("Fyll ut både dato og klokkeslett");
+      setError("Fyll ut både dato og klokkeslett — feltene under er fortsatt tomme.");
       return;
     }
 
@@ -105,7 +126,7 @@ export function RegisterForm({
             ref={dateRef}
             type="date"
             defaultValue={defaultDate}
-            onChange={() => setSaved(false)}
+            onChange={syncPreview}
             className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
           />
         </div>
@@ -117,11 +138,31 @@ export function RegisterForm({
             ref={timeRef}
             type="time"
             defaultValue={defaultTime}
-            onChange={() => setSaved(false)}
+            onChange={syncPreview}
             className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
           />
         </div>
       </div>
+
+      {/* Always-accurate summary of what will actually be submitted —
+          independent of whatever the native widgets happen to display. */}
+      {!saved && (
+        <div
+          className={`flex items-start gap-2 rounded-lg border px-4 py-3 text-sm ${
+            previewDate && previewTime
+              ? "border-brand-100 bg-brand-50 text-brand-900"
+              : "border-amber-200 bg-amber-50 text-amber-800"
+          }`}
+        >
+          {!(previewDate && previewTime) && <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />}
+          <span>
+            <strong>Registrerer:</strong>{" "}
+            {previewDate && previewTime
+              ? `${formatDateNorwegian(previewDate)} kl. ${previewTime}`
+              : "Ingen dato/tidspunkt valgt ennå — klikk i feltene over og velg."}
+          </span>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
