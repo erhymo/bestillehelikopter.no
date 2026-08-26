@@ -1,7 +1,8 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { TimeSelect } from "@/components/ui/time-select";
 
 interface CustomerInfo {
   name: string;
@@ -43,22 +44,23 @@ export const CustomerInfoStep = forwardRef<CustomerInfoStepHandle, CustomerInfoS
     },
     ref,
   ) {
-    // Uncontrolled on purpose: native date/time inputs are known to drift out
-    // of sync with a React-controlled value while typing (the widget shows a
-    // complete value while onChange never delivered it to state). Reading
-    // straight from the DOM at submit time — same fix already proven on the
-    // company register page — sidesteps that entirely.
+    // Date stays uncontrolled (native <input type="date"> has proven
+    // reliable throughout this flow) and is read straight from the DOM at
+    // submit time. Time uses two plain <select> dropdowns instead of a
+    // native <input type="time"> — see time-select.tsx for why.
     const dateRef = useRef<HTMLInputElement>(null);
-    const timeRef = useRef<HTMLInputElement>(null);
+    const [hour, setHour] = useState("");
+    const [minute, setMinute] = useState("");
 
     useImperativeHandle(ref, () => ({
       getDesiredDateTime: () => ({
         desiredDate: dateRef.current?.value ?? "",
-        desiredTime: timeRef.current?.value ?? "",
+        desiredTime: hour && minute ? `${hour}:${minute}` : "",
       }),
       resetDesiredDateTime: () => {
         if (dateRef.current) dateRef.current.value = "";
-        if (timeRef.current) timeRef.current.value = "";
+        setHour("");
+        setMinute("");
       },
     }));
 
@@ -116,13 +118,12 @@ export const CustomerInfoStep = forwardRef<CustomerInfoStepHandle, CustomerInfoS
         {/* Date & time */}
         <div className="grid gap-4 sm:grid-cols-2">
           <Input ref={dateRef} label="Ønsket dato" type="date" defaultValue="" />
-          <Input
-            ref={timeRef}
-            label="Ønsket tidspunkt"
-            type="time"
-            defaultValue=""
-            placeholder="Valgfritt"
-          />
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Ønsket tidspunkt
+            </label>
+            <TimeSelect hour={hour} minute={minute} onHourChange={setHour} onMinuteChange={setMinute} />
+          </div>
         </div>
         <label className="flex items-center gap-2">
           <input

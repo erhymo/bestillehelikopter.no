@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { OFFER_PRICE_DISCLAIMER } from "@/lib/offerAddons";
+import { formatDateNorwegian } from "@/lib/formatDate";
 import type { OfferAddon } from "@/types";
 
 interface EditableTotalPrice {
@@ -10,6 +11,10 @@ interface EditableTotalPrice {
 interface OfferPreviewProps {
   customerName: string;
   companyName: string;
+  /** Kundens ønskede dato (ISO, YYYY-MM-DD) — vist så kunden kan verifisere at det stemmer. */
+  desiredDate?: string;
+  desiredTime?: string;
+  flexibleDate?: boolean;
   flightCost: number;
   addons: OfferAddon[];
   totalPrice: number;
@@ -29,6 +34,9 @@ interface OfferPreviewProps {
 export function OfferPreview({
   customerName,
   companyName,
+  desiredDate,
+  desiredTime,
+  flexibleDate,
   flightCost,
   addons,
   totalPrice,
@@ -50,6 +58,16 @@ export function OfferPreview({
       </p>
 
       <div className="mb-6 space-y-3 rounded-lg bg-gray-50 p-4 text-sm">
+        {desiredDate && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Ønsket dato</span>
+            <span className="font-semibold">
+              {formatDateNorwegian(desiredDate)}
+              {desiredTime ? ` kl. ${desiredTime}` : ""}
+              {flexibleDate ? " (fleksibel)" : ""}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-gray-600">Selskap</span>
           <span className="font-semibold">{companyName}</span>

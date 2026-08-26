@@ -301,6 +301,9 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
             variant="embedded"
             customerName={job.customerName}
             companyName={companyName}
+            desiredDate={job.desiredDate}
+            desiredTime={job.desiredTime}
+            flexibleDate={job.flexibleDate}
             flightCost={totalPrice - tilflygningNum}
             addons={
               tilflygningNum > 0

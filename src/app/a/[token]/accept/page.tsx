@@ -120,6 +120,9 @@ export default async function CustomerAcceptPage({ params }: PageProps) {
       <OfferPreview
         customerName={jobData.customer?.name ?? ""}
         companyName={companyName}
+        desiredDate={jobData.desiredDate || undefined}
+        desiredTime={jobData.desiredTime || undefined}
+        flexibleDate={!!jobData.flexibleDate}
         flightCost={offerData.price ?? 0}
         addons={addons}
         totalPrice={grandTotal}

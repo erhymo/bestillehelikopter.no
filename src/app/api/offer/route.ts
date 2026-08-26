@@ -10,6 +10,7 @@ import {
   TILFLYGNING_ADDON_LABEL,
 } from "@/lib/offerAddons";
 import { FieldValue } from "firebase-admin/firestore";
+import { formatDateNorwegian } from "@/lib/formatDate";
 import { z } from "zod";
 
 // ── Zod schema ─────────────────────────────────────────────────
@@ -106,6 +107,11 @@ export async function POST(req: NextRequest) {
       if (sgApiKey) {
         const customerName = jobData.customer.name ?? "Kunde";
         const compName = companyData.name as string;
+        const desiredDate = jobData.desiredDate as string | undefined;
+        const desiredTime = jobData.desiredTime as string | undefined;
+        const dateLine = desiredDate
+          ? `${formatDateNorwegian(desiredDate)}${desiredTime ? ` kl. ${desiredTime}` : ""}${jobData.flexibleDate ? " (fleksibel)" : ""}`
+          : null;
         const addonRows = addons
           .map(
             (a) =>
@@ -119,6 +125,7 @@ export async function POST(req: NextRequest) {
 <h2 style="color:#1e3a5f;margin-top:0">Nytt tilbud mottatt</h2>
 <p>Hei ${customerName},</p>
 <p><strong>${compName}</strong> har sendt deg et tilbud på <strong>${totalPrice.toLocaleString("nb-NO")} NOK</strong>.</p>
+${dateLine ? `<p style="color:#555">Ønsket dato: <strong>${dateLine}</strong></p>` : ""}
 <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
 <tr><td style="padding:4px 0;color:#555">Flytidskostnad</td><td style="padding:4px 0;text-align:right;color:#555">${price.toLocaleString("nb-NO")} NOK</td></tr>
 ${addonRows}

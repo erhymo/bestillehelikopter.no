@@ -5,6 +5,7 @@ import { verifyOfferToken } from "@/lib/tokens";
 import { adminDb } from "@/lib/firebase/admin";
 import { JobStatus } from "@/types";
 import { FieldValue } from "firebase-admin/firestore";
+import { formatDateNorwegian } from "@/lib/formatDate";
 import { z } from "zod";
 
 // ── Zod schema ─────────────────────────────────────────────────
@@ -14,11 +15,6 @@ const RegisterPayloadSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Ugyldig dato"),
   time: z.string().regex(/^\d{2}:\d{2}$/, "Ugyldig klokkeslett"),
 });
-
-function formatDateNorwegian(isoDate: string): string {
-  const date = new Date(`${isoDate}T00:00:00`);
-  return date.toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" });
-}
 
 export async function POST(req: NextRequest) {
   try {

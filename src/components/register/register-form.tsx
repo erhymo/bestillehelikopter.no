@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
+import { TimeSelect, splitTimeString } from "@/components/ui/time-select";
+import { formatDateNorwegian } from "@/lib/formatDate";
 
 interface RegisterFormProps {
   token: string;
@@ -14,12 +16,6 @@ interface RegisterFormProps {
   flexibleDate: boolean;
 }
 
-function formatDateNorwegian(isoDate: string): string {
-  const date = new Date(`${isoDate}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return isoDate;
-  return date.toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" });
-}
-
 export function RegisterForm({
   token,
   initialDate,
@@ -28,32 +24,26 @@ export function RegisterForm({
   suggestedTime,
   flexibleDate,
 }: RegisterFormProps) {
-  // Uncontrolled on purpose: native date/time inputs are known to drift out
-  // of sync with a React-controlled `value` (the widget shows a complete
-  // value while onChange never delivered it to state), which silently
-  // blocked submission. Reading straight from the DOM at submit time
-  // sidesteps that entirely.
+  // Date stays uncontrolled (native <input type="date"> has proven reliable
+  // throughout this flow) and is read straight from the DOM at submit time.
   const dateRef = useRef<HTMLInputElement>(null);
-  const timeRef = useRef<HTMLInputElement>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const alreadyRegistered = !!initialDate;
   const defaultDate = initialDate ?? suggestedDate ?? "";
   const defaultTime = initialTime ?? suggestedTime ?? "";
 
-  // Browsers — Safari in particular — can render an *empty* date/time
-  // input as if it already shows today's date / the current time, even
-  // though the real underlying value is still "". That reliably fools
-  // people into thinking the field is filled in when it isn't. This
-  // preview mirrors the actual DOM value (not what the widget merely
-  // displays) so what gets submitted is never ambiguous.
-  const [previewDate, setPreviewDate] = useState(defaultDate);
-  const [previewTime, setPreviewTime] = useState(defaultTime);
+  // Time uses two plain <select> dropdowns instead — see time-select.tsx for why.
+  const initialTimeParts = splitTimeString(defaultTime);
+  const [hour, setHour] = useState(initialTimeParts.hour);
+  const [minute, setMinute] = useState(initialTimeParts.minute);
+  const time = hour && minute ? `${hour}:${minute}` : "";
 
-  function syncPreview() {
+  const [previewDate, setPreviewDate] = useState(defaultDate);
+  const [submitting, setSubmitting] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function syncDatePreview() {
     setPreviewDate(dateRef.current?.value ?? "");
-    setPreviewTime(timeRef.current?.value ?? "");
     setSaved(false);
   }
 
@@ -62,10 +52,9 @@ export function RegisterForm({
     setError(null);
 
     const date = dateRef.current?.value ?? "";
-    const time = timeRef.current?.value ?? "";
 
     if (!date || !time) {
-      setError("Fyll ut både dato og klokkeslett — feltene under er fortsatt tomme.");
+      setError("Fyll ut både dato og klokkeslett.");
       return;
     }
 
@@ -126,7 +115,7 @@ export function RegisterForm({
             ref={dateRef}
             type="date"
             defaultValue={defaultDate}
-            onChange={syncPreview}
+            onChange={syncDatePreview}
             className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
           />
         </div>
@@ -134,22 +123,25 @@ export function RegisterForm({
           <label className="mb-1 block text-sm font-semibold text-gray-700">
             Klokkeslett <span className="text-red-500">*</span>
           </label>
-          <input
-            ref={timeRef}
-            type="time"
-            defaultValue={defaultTime}
-            onChange={syncPreview}
-            className="w-full rounded-lg border px-4 py-2.5 focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
+          <TimeSelect
+            hour={hour}
+            minute={minute}
+            onHourChange={(v) => {
+              setHour(v);
+              setSaved(false);
+            }}
+            onMinuteChange={(v) => {
+              setMinute(v);
+              setSaved(false);
+            }}
           />
         </div>
       </div>
 
-      {/* Always-accurate summary of what will actually be submitted —
-          independent of whatever the native widgets happen to display. */}
-      {!saved && previewDate && previewTime && (
+      {!saved && previewDate && time && (
         <p className="text-sm text-gray-600">
           <strong className="text-gray-900">Registrerer:</strong>{" "}
-          {formatDateNorwegian(previewDate)} kl. {previewTime}
+          {formatDateNorwegian(previewDate)} kl. {time}
         </p>
       )}
 
