@@ -20,6 +20,7 @@ const OfferPayloadSchema = z.object({
   hourlyRate: z.number().positive("Timepris må være positiv"),
   tilflygningPrice: z.number().min(0).default(0),
   totalPrice: z.number().positive("Totalpris må være positiv"),
+  comment: z.string().max(1000).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -32,7 +33,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { token, hourlyRate, tilflygningPrice, totalPrice } = parsed.data;
+    const { token, hourlyRate, tilflygningPrice, totalPrice, comment } = parsed.data;
+    const trimmedComment = comment?.trim() || null;
     const addons: OfferAddon[] =
       tilflygningPrice > 0
         ? [{ key: TILFLYGNING_ADDON_KEY, label: TILFLYGNING_ADDON_LABEL, price: tilflygningPrice }]
@@ -88,7 +90,7 @@ export async function POST(req: NextRequest) {
       hourlyRate,
       addons,
       totalPrice,
-      comment: null,
+      comment: trimmedComment,
       attachmentRef: null,
       status: OfferStatus.Replied,
       repliedAt: now,
@@ -126,6 +128,7 @@ export async function POST(req: NextRequest) {
 <p>Hei ${customerName},</p>
 <p><strong>${compName}</strong> har sendt deg et tilbud på <strong>${totalPrice.toLocaleString("nb-NO")} NOK</strong>.</p>
 ${dateLine ? `<p style="color:#555">Ønsket dato: <strong>${dateLine}</strong></p>` : ""}
+${trimmedComment ? `<div style="background:#f0f4f8;border-radius:6px;padding:12px 16px;margin:12px 0"><p style="margin:0;color:#555;font-size:13px">Melding fra ${compName}:</p><p style="margin:4px 0 0;white-space:pre-wrap">${trimmedComment.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>` : ""}
 <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
 <tr><td style="padding:4px 0;color:#555">Flytidskostnad</td><td style="padding:4px 0;text-align:right;color:#555">${price.toLocaleString("nb-NO")} NOK</td></tr>
 ${addonRows}

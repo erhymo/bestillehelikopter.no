@@ -40,6 +40,7 @@ interface Draft {
   hourlyRate: string;
   tilflygningPrice: string;
   totalPriceOverride: string | null;
+  comment: string;
 }
 
 function draftKey(token: string) {
@@ -77,6 +78,7 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
   const [hourlyRate, setHourlyRate] = useState("");
   const [tilflygningPrice, setTilflygningPrice] = useState("");
   const [totalPriceOverride, setTotalPriceOverride] = useState<string | null>(null);
+  const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +92,7 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
       setHourlyRate(draft.hourlyRate);
       setTilflygningPrice(draft.tilflygningPrice);
       setTotalPriceOverride(draft.totalPriceOverride);
+      setComment(draft.comment ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only run once, on mount
   }, []);
@@ -97,8 +100,8 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
   // Autosave draft on every relevant change
   useEffect(() => {
     if (submitted) return;
-    saveDraft(token, { step, hourlyRate, tilflygningPrice, totalPriceOverride });
-  }, [token, step, hourlyRate, tilflygningPrice, totalPriceOverride, submitted]);
+    saveDraft(token, { step, hourlyRate, tilflygningPrice, totalPriceOverride, comment });
+  }, [token, step, hourlyRate, tilflygningPrice, totalPriceOverride, comment, submitted]);
 
   const hourlyRateNum = Number(hourlyRate) || 0;
   const tilflygningNum = Number(tilflygningPrice) || 0;
@@ -135,6 +138,7 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
           hourlyRate: hourlyRateNum,
           tilflygningPrice: tilflygningNum,
           totalPrice,
+          comment: comment.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -293,8 +297,8 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
       {step === 2 && (
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Slik vil kunden se tilbudet. Du kan kun endre totalprisen her — resten er
-            akkurat det kunden mottar.
+            Slik vil kunden se tilbudet. Du kan endre totalprisen og legge til en melding —
+            resten er akkurat det kunden mottar.
           </p>
 
           <OfferPreview
@@ -315,6 +319,7 @@ export function OfferWizard({ token, companyName, job }: OfferWizardProps) {
               value: totalPriceOverride ?? String(computedTotal),
               onChange: setTotalPriceOverride,
             }}
+            editableComment={{ value: comment, onChange: setComment }}
             actionSlot={
               <div>
                 <button

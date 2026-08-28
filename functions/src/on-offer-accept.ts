@@ -39,6 +39,7 @@ export const onOfferAccept = onDocumentUpdated(
     // dette kunden faktisk aksepterte, ikke bare den systemberegnede grunnprisen.
     const price = (afterData.totalPrice as number) ?? (afterData.price as number) ?? 0;
     const registerUrl = buildRegisterUrl(afterData.token as string);
+    const customerReply = (afterData.customerReply as string | null) ?? null;
 
     const db = admin.firestore();
 
@@ -98,6 +99,7 @@ export const onOfferAccept = onDocumentUpdated(
         offerId,
         companyId,
         registerUrl,
+        customerReply,
       }),
     ]);
 

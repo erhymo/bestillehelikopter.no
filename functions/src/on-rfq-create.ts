@@ -94,6 +94,7 @@ export const onRfqCreate = onDocumentCreated(
       addons: [],
       totalPrice: null,
       comment: null,
+      customerReply: null,
       attachmentRef: null,
       status: "pending",
       emailOpens: 0,

@@ -62,6 +62,7 @@ export interface OfferAcceptedEmailData {
   offerId: string;
   companyId: string;
   registerUrl: string;
+  customerReply: string | null;
 }
 
 // ── HTML builder ──────────────────────────────────────────────
@@ -258,6 +259,7 @@ export async function sendOfferAcceptedEmail(
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">E-post</td><td style="padding:8px 12px;font-weight:600">${escapeHtml(data.customerEmail)}</td></tr>
       <tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px;color:#666">Telefon</td><td style="padding:8px 12px;font-weight:600">${escapeHtml(data.customerPhone)}</td></tr>
     </table>
+    ${data.customerReply ? `<div style="background:#f0f4f8;border-radius:6px;padding:12px 16px;margin:16px 0"><p style="margin:0;color:#555;font-size:13px">Melding fra kunden:</p><p style="margin:4px 0 0;white-space:pre-wrap">${escapeHtml(data.customerReply)}</p></div>` : ""}
     <p>Ta kontakt med kunden for å avtale dato og tidspunkt, og registrer det under for å bekrefte oppdraget overfor kunden.</p>
     <div style="margin:24px 0;text-align:center">
       <a href="${escapeHtml(data.registerUrl)}"

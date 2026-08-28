@@ -124,7 +124,8 @@ export interface Offer {
   hourlyRate: number | null; // timepris NOK/time, fylt inn av selskapet
   addons: OfferAddon[]; // tilleggskostnader (kun "Tilflygning/oppmøte")
   totalPrice: number | null; // endelig totalpris vist til kunden — kan overstyres fritt i steg 2
-  comment: string | null;
+  comment: string | null; // Airlift sin melding til kunden, vist sammen med tilbudet
+  customerReply: string | null; // kundens melding tilbake til Airlift, satt ved aksept
   attachmentRef: string | null; // Storage path for company's PDF
   status: OfferStatus;
   emailOpens: number;

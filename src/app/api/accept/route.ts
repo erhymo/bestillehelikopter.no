@@ -10,6 +10,7 @@ import { z } from "zod";
 
 const AcceptPayloadSchema = z.object({
   token: z.string().min(1),
+  message: z.string().max(1000).optional(),
 });
 
 // ── POST handler ───────────────────────────────────────────────
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { token } = parsed.data;
+    const { token, message } = parsed.data;
 
     // 2. Verify token
     const payload = verifyOfferToken(token);
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
     //    which handles: job update, other offers closure, emails, events
     await adminDb.doc(`jobs/${jobId}/offers/${offerId}`).update({
       status: OfferStatus.Accepted,
+      customerReply: message?.trim() || null,
     });
 
     return NextResponse.json({ ok: true, jobId, offerId, companyId });

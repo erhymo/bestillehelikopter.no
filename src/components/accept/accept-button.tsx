@@ -10,6 +10,7 @@ interface AcceptButtonProps {
 }
 
 export function AcceptButton({ token, companyName }: AcceptButtonProps) {
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export function AcceptButton({ token, companyName }: AcceptButtonProps) {
       const res = await fetch("/api/accept", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, message: message.trim() || undefined }),
       });
       const data = await res.json();
 
@@ -60,6 +61,20 @@ export function AcceptButton({ token, companyName }: AcceptButtonProps) {
 
   return (
     <div>
+      <div className="mb-4">
+        <label className="mb-1 block text-sm font-semibold text-gray-700">
+          Melding til {company} (valgfritt)
+        </label>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={3}
+          maxLength={1000}
+          placeholder="F.eks. ønsket tidspunkt, spesielle behov eller annet dere bør vite."
+          className="w-full rounded-lg border px-3 py-2 text-sm focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
+        />
+      </div>
+
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
@@ -80,4 +95,3 @@ export function AcceptButton({ token, companyName }: AcceptButtonProps) {
     </div>
   );
 }
-

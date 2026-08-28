@@ -8,6 +8,11 @@ interface EditableTotalPrice {
   onChange: (value: string) => void;
 }
 
+interface EditableComment {
+  value: string;
+  onChange: (value: string) => void;
+}
+
 interface OfferPreviewProps {
   customerName: string;
   companyName: string;
@@ -20,6 +25,10 @@ interface OfferPreviewProps {
   totalPrice: number;
   /** If set, totalpris vises som et redigerbart felt i stedet for statisk tekst. */
   editableTotalPrice?: EditableTotalPrice;
+  /** Selskapets melding til kunden. Statisk (og kun vist hvis satt) med mindre editableComment er gitt. */
+  comment?: string | null;
+  /** If set, meldingen vises som et redigerbart tekstfelt i stedet for statisk tekst. */
+  editableComment?: EditableComment;
   /** Knapp/handling nederst — ekte AcceptButton på kundens side, evt. en forhåndsvisning hos selskapet. */
   actionSlot: ReactNode;
   /** Ytre kortstil — "page" (skygge, matcher andre token-sider) eller "embedded" (tynn ramme, sitter inni veiviseren). */
@@ -41,6 +50,8 @@ export function OfferPreview({
   addons,
   totalPrice,
   editableTotalPrice,
+  comment,
+  editableComment,
   actionSlot,
   variant = "page",
 }: OfferPreviewProps) {
@@ -103,6 +114,29 @@ export function OfferPreview({
           )}
         </div>
       </div>
+
+      {editableComment ? (
+        <div className="mb-6">
+          <label className="mb-1 block text-sm font-semibold text-gray-700">
+            Melding til kunden (valgfritt)
+          </label>
+          <textarea
+            value={editableComment.value}
+            onChange={(e) => editableComment.onChange(e.target.value)}
+            rows={3}
+            maxLength={1000}
+            placeholder="F.eks. «Vi kan ta oppdraget litt senere på dagen om det passer, ca. 17:00.»"
+            className="w-full rounded-lg border px-3 py-2 text-sm focus:border-brand-700 focus:outline-none focus:ring-1 focus:ring-brand-700"
+          />
+        </div>
+      ) : (
+        comment && (
+          <div className="mb-6 rounded-lg bg-brand-50 p-4 text-sm">
+            <p className="mb-1 font-semibold text-brand-900">Melding fra {companyName}</p>
+            <p className="whitespace-pre-wrap text-gray-800">{comment}</p>
+          </div>
+        )
+      )}
 
       <p className="mb-6 text-xs text-gray-500">{OFFER_PRICE_DISCLAIMER}</p>
 
